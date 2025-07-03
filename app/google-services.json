@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "887047969684",
+    "firebase_url": "https://literature-universe-default-rtdb.firebaseio.com",
+    "project_id": "literature-universe",
+    "storage_bucket": "literature-universe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:887047969684:android:b8440830612dbdd9e70d81",
+        "android_client_info": {
+          "package_name": "com.example.literatureuniverse"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjYb8srFGpsXEZfr3MvuM9emNR6ybvG3w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
