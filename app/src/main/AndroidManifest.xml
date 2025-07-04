@@ -15,6 +15,9 @@
         android:theme="@style/Theme.LiteratureUniverse"
         tools:targetApi="31">
         <activity
+            android:name=".activity.CreateStory"
+            android:exported="false" />
+        <activity
             android:name=".activity.MyStory"
             android:exported="false" />
         <activity

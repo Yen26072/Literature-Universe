@@ -48,6 +48,14 @@ public class MyStory extends BaseActivity {
             btnStart.setVisibility(View.VISIBLE);
             textView7.setVisibility(View.VISIBLE);
             recyclerView.setVisibility(View.GONE);
+
+            btnStart.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(MyStory.this, CreateStory.class);
+                    startActivity(intent);
+                }
+            });
         }
     }
 }
