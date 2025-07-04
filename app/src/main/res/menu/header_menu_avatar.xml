@@ -5,9 +5,17 @@
         android:title="Hồ sơ"
         android:icon="@drawable/ic_profile" />
     <item
+        android:id="@+id/menu_mailbox"
+        android:title="Hộp thư"
+        android:icon="@drawable/ic_mailbox" />
+    <item
         android:id="@+id/menu_library"
-        android:title="Cài đặt"
+        android:title="Thư viện"
         android:icon="@drawable/ic_library" />
+    <item
+        android:id="@+id/menu_mystory"
+        android:title="Truyện của tôi"
+        android:icon="@drawable/ic_my_story" />
     <item
         android:id="@+id/menu_logout"
         android:title="Đăng xuất"

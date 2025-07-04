@@ -14,7 +14,9 @@ import com.bumptech.glide.Glide;
 import com.example.literatureuniverse.R;
 import com.example.literatureuniverse.activity.HomeAdminSuper;
 import com.example.literatureuniverse.activity.Login;
+import com.example.literatureuniverse.activity.MailBox;
 import com.example.literatureuniverse.activity.MainActivity;
+import com.example.literatureuniverse.activity.MyStory;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.*;
@@ -151,7 +153,9 @@ public class BaseActivity extends AppCompatActivity {
         // Nếu là admin_super thì ẩn các mục khác ngoài Logout
         if ("admin_super".equals(currentRole)) {
             popup.getMenu().findItem(R.id.menu_profile).setVisible(false);
+            popup.getMenu().findItem(R.id.menu_mailbox).setVisible(false);
             popup.getMenu().findItem(R.id.menu_library).setVisible(false);
+            popup.getMenu().findItem(R.id.menu_mystory).setVisible(false);
         }
 
         // Ép PopupMenu hiển thị icon
@@ -177,6 +181,16 @@ public class BaseActivity extends AppCompatActivity {
                 FirebaseAuth.getInstance().signOut();
                 startActivity(new Intent(BaseActivity.this, MainActivity.class));
                 finish();
+                return true;
+            }
+            if(id==R.id.menu_mailbox){
+                Intent intent = new Intent(BaseActivity.this, MailBox.class);
+                startActivity(intent);
+                return true;
+            }
+            if(id==R.id.menu_mystory){
+                Intent intent = new Intent(BaseActivity.this, MyStory.class);
+                startActivity(intent);
                 return true;
             }
             return true;
