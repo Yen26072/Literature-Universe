@@ -48,7 +48,7 @@
             android:layout_height="wrap_content" />
 
         <TextView android:id="@+id/tvWarning"
-            android:textColor="#FF0000"
+            android:textColor="@color/red"
             android:textSize="13sp"
             android:text="⚠ Truyện đã bị admin xóa"
             android:visibility="gone"

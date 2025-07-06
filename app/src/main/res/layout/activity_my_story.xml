@@ -70,26 +70,28 @@
         android:textAllCaps="false"
         android:text="Bắt đầu" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerMyStory"
-        android:layout_marginTop="10dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
     <HorizontalScrollView
         android:id="@+id/tabScroll"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/blue"
-        android:visibility="gone"
-        android:fillViewport="true">
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:visibility="visible">
 
-    <LinearLayout
-        android:id="@+id/tabContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp"/>
-</HorizontalScrollView>
+        <LinearLayout
+            android:id="@+id/tabContainer"
+            android:layout_width="match_parent"
+            android:gravity="center"
+            android:layout_height="wrap_content"
+            android:padding="2dp"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerMyStory"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+
 
 </LinearLayout>

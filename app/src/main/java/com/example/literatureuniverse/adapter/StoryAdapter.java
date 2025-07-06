@@ -23,12 +23,18 @@ import java.util.Locale;
 
 public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryViewHolder> {
 
-    private final Context context;
-    private final List<Story> storyList;
+    private Context context;
+    private List<Story> storyList;
 
     public StoryAdapter(Context context, List<Story> storyList) {
         this.context = context;
         this.storyList = storyList;
+    }
+
+    public void setData(List<Story> newList) {
+        storyList.clear();
+        storyList.addAll(newList);
+        notifyDataSetChanged();
     }
 
     @NonNull

@@ -2,6 +2,7 @@ package com.example.literatureuniverse.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.HorizontalScrollView;
@@ -43,7 +44,7 @@ public class MyStory extends BaseActivity {
     RecyclerView recyclerView;
 
     private StoryAdapter storyAdapter;
-    private List<Story> storyList;
+    private List<Story> fullStoryList;
 
     private String currentUserId;
     private DatabaseReference storyRef, userRef;
@@ -54,6 +55,9 @@ public class MyStory extends BaseActivity {
 
     LinearLayout pageTabsLayout;
     HorizontalScrollView paginationScroll;
+
+    private boolean isStoriesLoaded = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,8 +79,8 @@ public class MyStory extends BaseActivity {
         paginationScroll = findViewById(R.id.tabScroll);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        storyList = new ArrayList<>();
-        storyAdapter = new StoryAdapter(this, storyList); // true = chế độ của tác giả
+        fullStoryList = new ArrayList<>();
+        storyAdapter = new StoryAdapter(this, new ArrayList<>());
         recyclerView.setAdapter(storyAdapter);
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -91,6 +95,11 @@ public class MyStory extends BaseActivity {
 
     @Override
     protected void onRoleLoaded(String role) {
+        // Ngăn gọi 2 lần
+        if (isStoriesLoaded) return;
+        isStoriesLoaded = true;
+        Log.d("MyStoryDebug", "onRoleLoaded được gọi với role: " + role);
+
         if ("reader".equals(role)) {
             btnStart.setVisibility(View.VISIBLE);
             textView7.setVisibility(View.VISIBLE);
@@ -152,25 +161,78 @@ public class MyStory extends BaseActivity {
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        storyList.clear();
+                        fullStoryList.clear();
 
                         for (DataSnapshot storySnap : snapshot.getChildren()) {
                             Story story = storySnap.getValue(Story.class);
                             if (story != null) {
-                                storyList.add(story); // bao gồm cả truyện đã bị isDeleted=true
+                                fullStoryList.add(story);
                             }
                         }
 
-                        // Sắp xếp theo thời gian cập nhật gần nhất
-                        Collections.sort(storyList, (s1, s2) ->
-                                Long.compare(s2.getUpdatedAt(), s1.getUpdatedAt()));
+                        Log.d("MyStoryDebug", "Tổng số truyện: " + fullStoryList.size());
 
-                        storyAdapter.notifyDataSetChanged();
+                        Collections.sort(fullStoryList, (s1, s2) -> Long.compare(s2.getUpdatedAt(), s1.getUpdatedAt()));
+                        currentPage = 1;
+                        updatePagination(); // GỌI 1 CHỖ DUY NHẤT
                     }
 
                     @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                    }
+                    public void onCancelled(@NonNull DatabaseError error) {}
                 });
     }
+
+    private void updatePagination() {
+        totalPages = (int) Math.ceil((double) fullStoryList.size() / itemsPerPage);
+        Log.d("MyStoryDebug", "Tổng số trang: " + totalPages);
+        Log.d("MyStoryDebug", "Tổng số trang: " + totalPages);
+        pageTabsLayout.removeAllViews();
+
+//        if (totalPages <= 1) {
+//            paginationScroll.setVisibility(View.GONE);
+//        } else {
+            paginationScroll.setVisibility(View.VISIBLE);
+            Log.d("MyStoryDebug", "Đã hiển thị tabScroll");
+            for (int i = 1; i <= totalPages; i++) {
+                final int pageNum = i;
+
+                // TẠO TEXTVIEW VỚI MARGIN, PADDING ĐẦY ĐỦ
+                TextView tab = new TextView(this);
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                );
+                params.setMargins(16, 2, 16, 2);
+                tab.setLayoutParams(params);
+
+                tab.setText(String.valueOf(i));
+                tab.setTextSize(16);
+                tab.setPadding(40, 20, 40, 20); // padding giúp tab dễ bấm và dễ nhìn
+                tab.setTextColor(i == currentPage ? getResources().getColor(R.color.white) : getResources().getColor(R.color.black));
+                tab.setBackgroundResource(i == currentPage ? R.drawable.page_selected_bg : R.drawable.page_unselected_bg);
+
+                tab.setOnClickListener(v -> {
+                    currentPage = pageNum;
+                    updatePagination(); // Cập nhật tab và trang hiện tại
+                });
+                Log.d("MyStoryDebug", "Tạo tab trang " + i);
+                pageTabsLayout.addView(tab);
+                Log.d("MyStoryDebug", "Tổng số tab con: " + pageTabsLayout.getChildCount());
+            }
+
+//        }
+
+        displayCurrentPage(); // chỉ gọi ở đây
+    }
+
+    private void displayCurrentPage() {
+        int start = (currentPage - 1) * itemsPerPage;
+        int end = Math.min(start + itemsPerPage, fullStoryList.size());
+
+        Log.d("MyStoryDebug", "Hiển thị từ index " + start + " đến " + (end - 1));
+
+        List<Story> subList = fullStoryList.subList(start, end);
+        storyAdapter.setData(subList);
+    }
+
 }

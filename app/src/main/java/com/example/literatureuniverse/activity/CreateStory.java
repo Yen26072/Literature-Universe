@@ -133,6 +133,7 @@ public class CreateStory extends BaseActivity {
                 String keyword = selected.get(0).getUnsplashKeyword();
 
                 fetchUnsplashImages(keyword);
+                imgCoverStory.setVisibility(View.VISIBLE);
             }
         });
 

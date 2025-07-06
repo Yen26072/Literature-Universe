@@ -156,7 +156,6 @@ public class AddChapter extends BaseActivity {
                 .child(chapterId)
                 .setValue(chapter)
                 .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Đã thêm chương", Toast.LENGTH_SHORT).show();
                     edtChapterTitle.setText("");
                     edtChapterContent.setText("");
                     // ✅ Cập nhật updatedAt cho truyện
