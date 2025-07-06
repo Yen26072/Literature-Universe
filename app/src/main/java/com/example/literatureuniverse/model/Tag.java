@@ -1,12 +1,31 @@
 package com.example.literatureuniverse.model;
 
-public class Tag {
+import java.io.Serializable;
+
+public class Tag implements Serializable {
     private String id;
     private String label;
     private int priority;
     private String unsplashKeyword;
+    private boolean isChecked;
 
     public Tag() {
+    }
+
+    public boolean isChecked() {
+        return isChecked;
+    }
+
+    public void setChecked(boolean checked) {
+        isChecked = checked;
+    }
+
+    public Tag(String id, String label, int priority, String unsplashKeyword, boolean isChecked) {
+        this.id = id;
+        this.label = label;
+        this.priority = priority;
+        this.unsplashKeyword = unsplashKeyword;
+        this.isChecked = isChecked;
     }
 
     public Tag(String id, String label, int priority, String unsplashKeyword) {

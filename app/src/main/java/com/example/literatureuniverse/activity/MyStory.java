@@ -57,5 +57,18 @@ public class MyStory extends BaseActivity {
                 }
             });
         }
+        else if("author".equals(role)){
+            btnStart.setVisibility(View.GONE);
+            textView7.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+
+            imgAdd.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(MyStory.this, CreateStory.class);
+                    startActivity(intent);
+                }
+            });
+        }
     }
 }
