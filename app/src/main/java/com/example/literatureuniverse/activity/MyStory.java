@@ -4,24 +4,56 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.literatureuniverse.R;
+import com.example.literatureuniverse.adapter.StoryAdapter;
 import com.example.literatureuniverse.base.BaseActivity;
+import com.example.literatureuniverse.model.Story;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class MyStory extends BaseActivity {
     Button btnStart;
     ImageView imgAdd;
     TextView textView7;
     RecyclerView recyclerView;
+
+    private StoryAdapter storyAdapter;
+    private List<Story> storyList;
+
+    private String currentUserId;
+    private DatabaseReference storyRef, userRef;
+
+    private int itemsPerPage = 7;
+    private int currentPage = 1;
+    private int totalPages = 1;
+
+    LinearLayout pageTabsLayout;
+    HorizontalScrollView paginationScroll;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +71,22 @@ public class MyStory extends BaseActivity {
         imgAdd = findViewById(R.id.imgAdd);
         textView7 = findViewById(R.id.textView7);
         recyclerView = findViewById(R.id.recyclerMyStory);
+        pageTabsLayout = findViewById(R.id.tabContainer);
+        paginationScroll = findViewById(R.id.tabScroll);
 
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        storyList = new ArrayList<>();
+        storyAdapter = new StoryAdapter(this, storyList); // true = chế độ của tác giả
+        recyclerView.setAdapter(storyAdapter);
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            finish();
+            return;
+        }
+        currentUserId = user.getUid();
+        storyRef = FirebaseDatabase.getInstance().getReference("stories");
+        userRef = FirebaseDatabase.getInstance().getReference("users").child(currentUserId);
     }
 
     @Override
@@ -56,11 +103,15 @@ public class MyStory extends BaseActivity {
                     startActivity(intent);
                 }
             });
+
         }
         else if("author".equals(role)){
             btnStart.setVisibility(View.GONE);
             textView7.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
+
+            checkPostBanStatus();
+            loadMyStories();
 
             imgAdd.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -70,5 +121,56 @@ public class MyStory extends BaseActivity {
                 }
             });
         }
+    }
+
+    private void checkPostBanStatus() {
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Boolean canPost = snapshot.child("canPost").getValue(Boolean.class);
+                Long banUntil = snapshot.child("postBanUntil").getValue(Long.class);
+
+                long now = System.currentTimeMillis();
+
+                if (canPost != null && !canPost && banUntil != null && banUntil > now) {
+                    imgAdd.setEnabled(false);
+                    imgAdd.setAlpha(0.5f);
+                    imgAdd.setOnClickListener(null);
+                } else {
+                    imgAdd.setEnabled(true);
+                    imgAdd.setAlpha(1f);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
+    }
+
+    private void loadMyStories() {
+        storyRef.orderByChild("authorId").equalTo(currentUserId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        storyList.clear();
+
+                        for (DataSnapshot storySnap : snapshot.getChildren()) {
+                            Story story = storySnap.getValue(Story.class);
+                            if (story != null) {
+                                storyList.add(story); // bao gồm cả truyện đã bị isDeleted=true
+                            }
+                        }
+
+                        // Sắp xếp theo thời gian cập nhật gần nhất
+                        Collections.sort(storyList, (s1, s2) ->
+                                Long.compare(s2.getUpdatedAt(), s1.getUpdatedAt()));
+
+                        storyAdapter.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                    }
+                });
     }
 }

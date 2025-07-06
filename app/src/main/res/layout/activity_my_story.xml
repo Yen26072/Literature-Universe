@@ -76,4 +76,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
+    <HorizontalScrollView
+        android:id="@+id/tabScroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/blue"
+        android:visibility="gone"
+        android:fillViewport="true">
+
+    <LinearLayout
+        android:id="@+id/tabContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"/>
+</HorizontalScrollView>
+
 </LinearLayout>

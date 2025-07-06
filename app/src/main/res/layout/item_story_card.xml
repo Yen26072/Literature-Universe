@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/imgCover"
+        android:layout_width="80dp"
+        android:layout_height="110dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_avatar" />
+
+    <LinearLayout
+        android:layout_marginStart="8dp"
+        android:orientation="vertical"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1">
+
+        <TextView android:id="@+id/tvTitle"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#000"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView android:id="@+id/tvLatestChapter"
+            android:text="Chương mới: ..."
+            android:textSize="14sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView android:id="@+id/tvUpdatedAt"
+            android:text="Cập nhật: ..."
+            android:textSize="13sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView android:id="@+id/tvStatus"
+            android:text="Trạng thái: ..."
+            android:textSize="13sp"
+            android:textColor="#555"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView android:id="@+id/tvWarning"
+            android:textColor="#FF0000"
+            android:textSize="13sp"
+            android:text="⚠ Truyện đã bị admin xóa"
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+</LinearLayout>

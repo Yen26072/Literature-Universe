@@ -159,6 +159,15 @@ public class AddChapter extends BaseActivity {
                     Toast.makeText(this, "Đã thêm chương", Toast.LENGTH_SHORT).show();
                     edtChapterTitle.setText("");
                     edtChapterContent.setText("");
+                    // ✅ Cập nhật updatedAt cho truyện
+                    storyRef.child(currentStory.getStoryId())
+                            .child("updatedAt")
+                            .setValue(now);
+                    // ✅ Cập nhật latestChapter
+                    DatabaseReference latestChapterRef = storyRef.child(currentStory.getStoryId()).child("latestChapter");
+                    latestChapterRef.child("chapterId").setValue(chapterId);
+                    latestChapterRef.child("title").setValue(title);
+                    latestChapterRef.child("createdAt").setValue(now);
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();
