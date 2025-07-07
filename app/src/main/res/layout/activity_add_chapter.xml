@@ -14,6 +14,35 @@
 
         <include layout="@layout/header"/>
 
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/constrain"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@color/blue">
+
+            <ImageView
+                android:id="@+id/imageView4"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginStart="20dp"
+                android:src="@drawable/ic_return"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/textView6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="15dp"
+                android:text="Thêm chương"
+                android:textColor="@color/white"
+                android:textSize="28sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/imageView4"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
         <!-- Nhập chương thủ công -->
         <TextView
             android:layout_width="wrap_content"
@@ -62,7 +91,7 @@
             android:id="@+id/btnChooseFile"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Chọn file từ điện thoại (.txt, .docx)" />
+            android:text="Chọn file từ điện thoại (.docx)" />
 
         <TextView
             android:id="@+id/txtFileStatus"
@@ -74,22 +103,25 @@
 
         <!-- Danh sách chương đã thêm -->
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/tvChapterHeader"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Danh sách chương đã thêm"
+            android:text="Danh sách chương vừa thêm:"
             android:textStyle="bold"
-            android:layout_marginTop="16dp" />
+            android:textSize="16sp"
+            android:visibility="gone"
+            android:layout_marginTop="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerChapters"
-            android:layout_width="match_parent"
-            android:layout_height="300dp" />
-
-        <Button
-            android:id="@+id/btnSubmitAll"
+        <LinearLayout
+            android:id="@+id/chapterListLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Lưu truyện và tất cả chương" />
+            android:orientation="vertical"
+            android:visibility="gone"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"/>
     </LinearLayout>
 
 </ScrollView>

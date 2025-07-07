@@ -7,6 +7,8 @@ import android.provider.OpenableColumns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -45,6 +47,8 @@ import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 public class AddChapter extends BaseActivity {
     private EditText edtChapterTitle, edtChapterContent;
     private Button btnSubmitChapter, btnSelectFile;
+    private TextView tvChapterHeader;
+    private LinearLayout chapterListLayout;
     private Story currentStory;
     private boolean isNewStory;
     private DatabaseReference storyRef, chaptersRef, tagStoriesRef;
@@ -67,6 +71,8 @@ public class AddChapter extends BaseActivity {
         edtChapterContent = findViewById(R.id.edtChapterContent);
         btnSubmitChapter = findViewById(R.id.btnAddChapter);
         btnSelectFile = findViewById(R.id.btnChooseFile);
+        tvChapterHeader = findViewById(R.id.tvChapterHeader);
+        chapterListLayout = findViewById(R.id.chapterListLayout);
 
         storyRef = FirebaseDatabase.getInstance().getReference("stories");
         chaptersRef = FirebaseDatabase.getInstance().getReference("chapters");
@@ -191,8 +197,23 @@ public class AddChapter extends BaseActivity {
                     saveChapter(chapter.getTitle(), chapter.getContent());
                 }
             }
+            showChapterTitles(chapters);
 
             Toast.makeText(this, "Đã thêm " + chapters.size() + " chương từ file", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void showChapterTitles(List<Chapter> chapters) {
+        tvChapterHeader.setVisibility(View.VISIBLE);
+        chapterListLayout.setVisibility(View.VISIBLE);
+        chapterListLayout.removeAllViews();
+
+        for (Chapter chapter : chapters) {
+            TextView titleView = new TextView(this);
+            titleView.setText("• " + chapter.getTitle());
+            titleView.setTextSize(14);
+            titleView.setPadding(0, 8, 0, 8);
+            chapterListLayout.addView(titleView);
         }
     }
 
