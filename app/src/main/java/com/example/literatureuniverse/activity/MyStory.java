@@ -8,13 +8,10 @@ import android.widget.Button;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -22,7 +19,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.literatureuniverse.R;
-import com.example.literatureuniverse.adapter.StoryAdapter;
+import com.example.literatureuniverse.adapter.MyStoryAdapter;
 import com.example.literatureuniverse.base.BaseActivity;
 import com.example.literatureuniverse.model.Story;
 import com.google.firebase.auth.FirebaseAuth;
@@ -43,7 +40,7 @@ public class MyStory extends BaseActivity {
     TextView textView7;
     RecyclerView recyclerView;
 
-    private StoryAdapter storyAdapter;
+    private MyStoryAdapter myStoryAdapter;
     private List<Story> fullStoryList;
 
     private String currentUserId;
@@ -80,8 +77,8 @@ public class MyStory extends BaseActivity {
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         fullStoryList = new ArrayList<>();
-        storyAdapter = new StoryAdapter(this, new ArrayList<>());
-        recyclerView.setAdapter(storyAdapter);
+        myStoryAdapter = new MyStoryAdapter(this, new ArrayList<>());
+        recyclerView.setAdapter(myStoryAdapter);
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
@@ -232,7 +229,7 @@ public class MyStory extends BaseActivity {
         Log.d("MyStoryDebug", "Hiển thị từ index " + start + " đến " + (end - 1));
 
         List<Story> subList = fullStoryList.subList(start, end);
-        storyAdapter.setData(subList);
+        myStoryAdapter.setData(subList);
     }
 
 }

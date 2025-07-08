@@ -50,6 +50,7 @@ public class AddChapter extends BaseActivity {
     private TextView tvChapterHeader;
     private LinearLayout chapterListLayout;
     private Story currentStory;
+    private String storyId;
     private boolean isNewStory;
     private DatabaseReference storyRef, chaptersRef, tagStoriesRef;
     private static final int PICK_TEXT_FILE = 1;
@@ -78,14 +79,31 @@ public class AddChapter extends BaseActivity {
         chaptersRef = FirebaseDatabase.getInstance().getReference("chapters");
         tagStoriesRef = FirebaseDatabase.getInstance().getReference("storyTags");
 
-        currentStory = (Story) getIntent().getSerializableExtra("story");
+        storyId = getIntent().getStringExtra("storyId");
+
         isNewStory = getIntent().getBooleanExtra("isNewStory", false);
 
 
-        if (currentStory == null) {
-            Toast.makeText(this, "Không nhận được thông tin truyện", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
+        if (storyId == null) {
+            currentStory = (Story) getIntent().getSerializableExtra("story");
+            Toast.makeText(this, "currentStory=story",Toast.LENGTH_SHORT).show();
+        }
+        else{
+            storyRef.child(storyId).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (!snapshot.exists()) return;
+
+                    Story story = snapshot.getValue(Story.class);
+                    if (story == null) return;
+                    currentStory = story;
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+
+                }
+            });
         }
         btnSubmitChapter.setOnClickListener(v -> {
             String title = edtChapterTitle.getText().toString().trim();

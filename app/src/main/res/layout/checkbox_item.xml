@@ -5,4 +5,5 @@
     android:layout_height="wrap_content"
     android:buttonTint="@color/blue"
     android:textColor="@color/black"
+    android:minHeight="45dp"
     android:padding="8dp"/>

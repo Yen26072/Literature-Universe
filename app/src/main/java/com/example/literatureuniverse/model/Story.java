@@ -226,6 +226,5 @@ public class Story implements Serializable {
         public void setCreatedAt(long createdAt) {
             this.createdAt = createdAt;
         }
-// Getters và Setters
     }
 }

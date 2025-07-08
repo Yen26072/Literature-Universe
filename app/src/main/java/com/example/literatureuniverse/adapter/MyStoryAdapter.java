@@ -21,12 +21,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryViewHolder> {
+public class MyStoryAdapter extends RecyclerView.Adapter<MyStoryAdapter.StoryViewHolder> {
 
     private Context context;
     private List<Story> storyList;
 
-    public StoryAdapter(Context context, List<Story> storyList) {
+    public MyStoryAdapter(Context context, List<Story> storyList) {
         this.context = context;
         this.storyList = storyList;
     }
@@ -40,7 +40,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryViewHol
     @NonNull
     @Override
     public StoryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_story_card, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_mystory_card, parent, false);
         return new StoryViewHolder(view);
     }
 
@@ -69,7 +69,7 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryViewHol
         // Nếu truyện bị xóa thì hiển thị cảnh báo, vẫn cho nhấn
         if (story.isDeleted()) {
             holder.tvWarning.setVisibility(View.VISIBLE);
-            holder.tvWarning.setText("⚠ Truyện đã bị admin xóa");
+            holder.tvWarning.setText("⚠ Truyện đã bị xóa");
             holder.itemView.setAlpha(0.6f);
         } else {
             holder.tvWarning.setVisibility(View.GONE);
