@@ -46,7 +46,7 @@ public class MyStory extends BaseActivity {
     private String currentUserId;
     private DatabaseReference storyRef, userRef;
 
-    private int itemsPerPage = 1;
+    private int itemsPerPage = 2;
     private int currentPage = 1;
     private int totalPages = 1;
 
@@ -185,9 +185,6 @@ public class MyStory extends BaseActivity {
         Log.d("MyStoryDebug", "Tổng số trang: " + totalPages);
         pageTabsLayout.removeAllViews();
 
-//        if (totalPages <= 1) {
-//            paginationScroll.setVisibility(View.GONE);
-//        } else {
             paginationScroll.setVisibility(View.VISIBLE);
             Log.d("MyStoryDebug", "Đã hiển thị tabScroll");
             for (int i = 1; i <= totalPages; i++) {

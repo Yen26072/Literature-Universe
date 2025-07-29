@@ -3,6 +3,7 @@ package com.example.literatureuniverse.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,7 +29,7 @@ public class Splash extends AppCompatActivity {
             return insets;
         });
         FirebaseApp.initializeApp(this);
-
+        Log.d("Test", "Splash onCreate");
         Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override

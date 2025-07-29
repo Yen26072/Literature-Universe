@@ -15,7 +15,7 @@ import com.example.literatureuniverse.model.Chapter;
 
 import java.util.List;
 
-public class ChapterAdapter extends RecyclerView.Adapter<ChapterAdapter.ChapterViewHolder> {
+public class ChapterAdapterForDetail extends RecyclerView.Adapter<ChapterAdapterForDetail.ChapterViewHolder> {
 
     private Context context;
     private List<Chapter> chapterList;
@@ -28,7 +28,7 @@ public class ChapterAdapter extends RecyclerView.Adapter<ChapterAdapter.ChapterV
         void onDelete(Chapter chapter);
     }
 
-    public ChapterAdapter(Context context, List<Chapter> chapterList, boolean isEditable) {
+    public ChapterAdapterForDetail(Context context, List<Chapter> chapterList, boolean isEditable) {
         this.context = context;
         this.chapterList = chapterList;
         this.isEditable = isEditable;
@@ -46,7 +46,7 @@ public class ChapterAdapter extends RecyclerView.Adapter<ChapterAdapter.ChapterV
     @NonNull
     @Override
     public ChapterViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.item_chapter, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.item_chapter_my_story_detail, parent, false);
         return new ChapterViewHolder(view);
     }
 

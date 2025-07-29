@@ -160,6 +160,7 @@ public class CreateStory extends BaseActivity {
                 story.setUpdatedAt(System.currentTimeMillis());
                 story.setLikesCount(0);
                 story.setViewsCount(0);
+                story.setCommentsCount(0);
                 story.setFollowersCount(0);
                 story.setDeleted(false);
 

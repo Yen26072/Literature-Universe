@@ -22,8 +22,8 @@
         <TextView android:id="@+id/tvTitle"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="#000"
-            android:maxLines="2"
+            android:textColor="@color/black"
+            android:maxLines="1"
             android:ellipsize="end"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
@@ -32,6 +32,7 @@
             android:text="Chương mới: ..."
             android:maxLines="1"
             android:textSize="14sp"
+            android:ellipsize="end"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 

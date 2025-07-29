@@ -2,6 +2,7 @@ package com.example.literatureuniverse.base;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -29,6 +30,7 @@ public class BaseActivity extends AppCompatActivity {
     protected ImageView avatarImageView, imageView;
     protected TextView txtLogin;
     protected String currentRole = null;
+    private PopupMenu popup;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -40,8 +42,17 @@ public class BaseActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
     }
+    @Override
+    protected void onDestroy() {
+        if (popup != null) {
+            popup.dismiss(); // không bắt buộc nhưng an toàn nếu đang hiển thị
+            popup = null;
+        }
+        super.onDestroy();
+    }
 
     protected void setupHeader() {
+        Log.d("BaseActivity", "setupHeader called");
         avatarImageView = findViewById(R.id.imgAvatar);
         txtLogin = findViewById(R.id.txtLoginMain);
         imageView = findViewById(R.id.imageView);
@@ -145,9 +156,13 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     protected void showPopupMenuAvatar(View view) {
-        PopupMenu popup = new PopupMenu(this, view);
-        MenuInflater inflater = popup.getMenuInflater();
-        inflater.inflate(R.menu.header_menu_avatar, popup.getMenu());
+        if (!isFinishing() && !isDestroyed()) {
+            popup = new PopupMenu(this, view);
+            popup.getMenuInflater().inflate(R.menu.header_menu_avatar, popup.getMenu());
+        }
+//        PopupMenu popup = new PopupMenu(this, view);
+//        MenuInflater inflater = popup.getMenuInflater();
+//        inflater.inflate(R.menu.header_menu_avatar, popup.getMenu());
 
         // Nếu là admin_super thì ẩn các mục khác ngoài Logout
         if ("admin_super".equals(currentRole)) {

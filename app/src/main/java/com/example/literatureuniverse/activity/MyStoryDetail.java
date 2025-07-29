@@ -1,17 +1,14 @@
 package com.example.literatureuniverse.activity;
 
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.*;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -21,14 +18,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.literatureuniverse.ExpandableHeightGridView;
 import com.example.literatureuniverse.R;
-import com.example.literatureuniverse.adapter.ChapterAdapter;
+import com.example.literatureuniverse.adapter.ChapterAdapterForDetail;
 import com.example.literatureuniverse.adapter.TagCheckboxAdapterForDetail;
 import com.example.literatureuniverse.base.BaseActivity;
 import com.example.literatureuniverse.model.Chapter;
 import com.example.literatureuniverse.model.Story;
 import com.example.literatureuniverse.model.Tag;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.*;
 
 import java.util.ArrayList;
@@ -42,7 +38,7 @@ public class MyStoryDetail extends BaseActivity {
 
     private EditText edtTitle, edtDescription;
     private ImageView imgCover, btnDeleteStory, btnAddChapter, btnRestoreStory;
-    private Button btnSave;
+    private Button btnSave, btnToHome;
     private GridView gridTags;
     private RecyclerView recyclerChapterList;
     private Spinner spinnerStatus;
@@ -52,7 +48,7 @@ public class MyStoryDetail extends BaseActivity {
     private String storyId;
     private DatabaseReference storyRef, chapterRef, tagRef, userRef;
     private TagCheckboxAdapterForDetail tagAdapter;
-    private ChapterAdapter chapterAdapter;
+    private ChapterAdapterForDetail chapterAdapter;
     private List<Chapter> chapterList = new ArrayList<>();
     private List<Tag> allTags = new ArrayList<>();
 
@@ -77,6 +73,7 @@ public class MyStoryDetail extends BaseActivity {
         edtDescription = findViewById(R.id.edtDescription);
         imgCover = findViewById(R.id.imgCover);
         btnSave = findViewById(R.id.btnSave);
+        btnToHome = findViewById(R.id.btnToHome);
         btnAddChapter = findViewById(R.id.imgAddChapter);
         btnDeleteStory = findViewById(R.id.imgDeleteStory);
         btnRestoreStory = findViewById(R.id.imgReStoreStory);
@@ -85,7 +82,7 @@ public class MyStoryDetail extends BaseActivity {
         spinnerStatus = findViewById(R.id.spnStatus);
 
         recyclerChapterList.setLayoutManager(new LinearLayoutManager(this));
-        chapterAdapter = new ChapterAdapter(this, chapterList, true);
+        chapterAdapter = new ChapterAdapterForDetail(this, chapterList, true);
         recyclerChapterList.setAdapter(chapterAdapter);
 
         // Thiết lập Adapter cho Spinner
@@ -111,6 +108,12 @@ public class MyStoryDetail extends BaseActivity {
         loadStory();
         loadChapters();
 
+        btnToHome.setOnClickListener(v -> {
+            Intent intent = new Intent(MyStoryDetail.this, HomeStory.class);
+            intent.putExtra("storyId", storyId);
+            startActivity(intent);
+        });
+
         btnAddChapter.setOnClickListener(v -> {
             Intent intent = new Intent(MyStoryDetail.this, AddChapter.class);
             intent.putExtra("storyId", storyId);
@@ -133,7 +136,7 @@ public class MyStoryDetail extends BaseActivity {
 
         btnSave.setOnClickListener(v -> saveStory());
 
-        chapterAdapter.setOnChapterActionListener(new ChapterAdapter.OnChapterActionListener() {
+        chapterAdapter.setOnChapterActionListener(new ChapterAdapterForDetail.OnChapterActionListener() {
             @Override
             public void onEdit(Chapter chapter) {
                 if (isDeletedByAdmin) {
@@ -473,44 +476,4 @@ public class MyStoryDetail extends BaseActivity {
             }
         });
     }
-
-//    public static void setGridViewHeightBasedOnChildren(GridView gridView, int numColumns) {
-//        ListAdapter adapter = gridView.getAdapter();
-//        if (adapter == null) return;
-//
-//        int totalHeight = 0;
-//        int items = adapter.getCount();
-//        int rows = (int) Math.ceil((double) items / numColumns);
-//
-//        int[] rowHeights = new int[rows];
-//
-//        for (int row = 0; row < rows; row++) {
-//            int maxHeight = 0;
-//
-//            // duyệt qua từng item trong dòng
-//            for (int col = 0; col < numColumns; col++) {
-//                int index = row * numColumns + col;
-//                if (index >= items) break;
-//
-//                View item = adapter.getView(index, null, gridView);
-//                item.measure(
-//                        View.MeasureSpec.makeMeasureSpec(gridView.getWidth() / numColumns, View.MeasureSpec.AT_MOST),
-//                        View.MeasureSpec.UNSPECIFIED
-//                );
-//                int itemHeight = item.getMeasuredHeight();
-//                maxHeight = Math.max(maxHeight, itemHeight);
-//            }
-//
-//            rowHeights[row] = maxHeight;
-//            totalHeight += maxHeight;
-//        }
-//
-//        // Thêm khoảng cách giữa các dòng
-//        totalHeight += gridView.getVerticalSpacing() * (rows - 1);
-//
-//        ViewGroup.LayoutParams params = gridView.getLayoutParams();
-//        params.height = totalHeight;
-//        gridView.setLayoutParams(params);
-//        gridView.requestLayout();
-//    }
 }

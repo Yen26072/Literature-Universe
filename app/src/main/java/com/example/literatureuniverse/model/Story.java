@@ -15,6 +15,7 @@ public class Story implements Serializable {
     private long updatedAt;
     private int likesCount;
     private int viewsCount;
+    private int commentsCount;
     private int followersCount;
     private boolean isDeleted;
     private String modifiedBy;
@@ -23,6 +24,34 @@ public class Story implements Serializable {
 
     public String getStoryId() {
         return storyId;
+    }
+
+    public int getCommentsCount() {
+        return commentsCount;
+    }
+
+    public Story(String storyId, String title, String description, String authorId, String coverUrl, List<String> tags, String status, long createdAt, long updatedAt, int likesCount, int viewsCount, int commentsCount, int followersCount, boolean isDeleted, String modifiedBy, long modifiedAt, LatestChapter latestChapter) {
+        this.storyId = storyId;
+        this.title = title;
+        this.description = description;
+        this.authorId = authorId;
+        this.coverUrl = coverUrl;
+        this.tags = tags;
+        this.status = status;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.likesCount = likesCount;
+        this.viewsCount = viewsCount;
+        this.commentsCount = commentsCount;
+        this.followersCount = followersCount;
+        this.isDeleted = isDeleted;
+        this.modifiedBy = modifiedBy;
+        this.modifiedAt = modifiedAt;
+        this.latestChapter = latestChapter;
+    }
+
+    public void setCommentsCount(int commentsCount) {
+        this.commentsCount = commentsCount;
     }
 
     public void setStoryId(String storyId) {
