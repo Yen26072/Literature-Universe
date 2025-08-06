@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -27,39 +28,70 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.literatureuniverse.R;
 import com.example.literatureuniverse.adapter.ChapterAdapterForHomeStory;
+import com.example.literatureuniverse.adapter.CommentAdapter;
+import com.example.literatureuniverse.adapter.StoryAdapter;
 import com.example.literatureuniverse.base.BaseActivity;
 import com.example.literatureuniverse.model.Chapter;
+import com.example.literatureuniverse.model.Comment;
+import com.example.literatureuniverse.model.CommentReply;
 import com.example.literatureuniverse.model.Story;
+import com.example.literatureuniverse.model.User;
 import com.google.android.flexbox.FlexboxLayout;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.annotations.Nullable;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class HomeStory extends BaseActivity {
     private String authorName, authorId;
     private Story currentStory;
     private String storyId;
-    private DatabaseReference storyRef, chapterRef, tagRef, userRef;
-    private TextView txtStoryName, txtAuthorName, txtEyes, txtLike, txtComments, txtStatus, txtNewChapter, txtLatestUpdate, txtTags, txtDes;
-    private ImageView imgCover;
-    private RecyclerView recyclerViewChapter;
+    private DatabaseReference storyRef, chapterRef, tagRef, userRef, commentRef, replyRef, userRef2;
+    private TextView txtStoryName, txtAuthorName, txtEyes, txtLike, txtComments, txtStatus, txtNewChapter, txtLatestUpdate, txtDes, txtGoiY;
+    private ImageView imgCover, imgAvatarComment;
+    private RecyclerView recyclerViewChapter, recyclerViewGoiY, recyclerComment;
     LinearLayout tabContainerTop, tabContainerBottom;
     HorizontalScrollView paginationScrollChapterTop, paginationScrollChapterBottom;
     private int itemsPerPage = 10;
     private int currentPage = 1;
     private int totalPages = 1;
     private ChapterAdapterForHomeStory chapterAdapter;
+    private StoryAdapter storyAdapter;
     private List<Chapter> chapterList;
+    private List<Story> storyList;
+    private List<TextView> allPageTabs = new ArrayList<>();
+    private EditText edtComment;
+    private Button btnSendComment;
+    private List<Comment> commentList = new ArrayList<>();
+    private Map<String, List<CommentReply>> replyMap = new HashMap<>();
+    private CommentAdapter commentAdapter;
+    private String currentUserId = FirebaseAuth.getInstance().getUid();
+    private String chapterId = null;
+    private HashMap<String, User> userMap = new HashMap<>();
+
+    private List<Comment> allComments = new ArrayList<>();
+    private List<TextView> allCommentTabs = new ArrayList<>();
+    private int currentCommentPage = 1;
+    private int totalCommentPages = 1;
+    private int commentsPerPage = 3; // hoặc số dòng bạn muốn hiển thị
+    private LinearLayout tabContainerComment;
+    private HorizontalScrollView paginationScrollComment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,21 +111,37 @@ public class HomeStory extends BaseActivity {
         txtLike = findViewById(R.id.txtLike);
         txtComments = findViewById(R.id.txtComments);
         imgCover = findViewById(R.id.imgCover2);
+        imgAvatarComment = findViewById(R.id.imgAvatarComment);
         txtStatus = findViewById(R.id.txtStatus);
         txtNewChapter = findViewById(R.id.txtNewChapter);
         txtLatestUpdate = findViewById(R.id.txtLastestUpdate);
-        txtTags = findViewById(R.id.txtTags);
         txtDes = findViewById(R.id.txtDes);
+        txtGoiY = findViewById(R.id.txtGoiY);
         recyclerViewChapter = findViewById(R.id.recyclerHomeStory_Chapter);
+        recyclerViewGoiY = findViewById(R.id.rcvGoiY);
         tabContainerTop = findViewById(R.id.tabContainerChapter);
         tabContainerBottom = findViewById(R.id.tabContainerChapterBottom);
         paginationScrollChapterTop = findViewById(R.id.tabScrollChapter);
         paginationScrollChapterBottom = findViewById(R.id.tabScrollChapterBottom);
+        edtComment = findViewById(R.id.edtComment);
+        btnSendComment = findViewById(R.id.btnSendComment);
+        recyclerComment = findViewById(R.id.recyclerComment);
+        tabContainerComment = findViewById(R.id.tabContainerComment);
+        paginationScrollComment = findViewById(R.id.tabScrollComment);
 
         recyclerViewChapter.setLayoutManager(new LinearLayoutManager(this));
         chapterList = new ArrayList<>();
         chapterAdapter = new ChapterAdapterForHomeStory(new ArrayList<>(), this);
         recyclerViewChapter.setAdapter(chapterAdapter);
+
+        recyclerViewGoiY.setLayoutManager(new LinearLayoutManager(this));
+        storyList = new ArrayList<>();
+        storyAdapter = new StoryAdapter(this, new ArrayList<>());
+        recyclerViewGoiY.setAdapter(storyAdapter);
+
+        recyclerComment.setLayoutManager(new LinearLayoutManager(this));
+        commentAdapter = new CommentAdapter(this, new ArrayList<>(), replyMap, userMap);
+        recyclerComment.setAdapter(commentAdapter);
 
         storyId = getIntent().getStringExtra("storyId");
         if (storyId == null) {
@@ -105,11 +153,219 @@ public class HomeStory extends BaseActivity {
         storyRef = FirebaseDatabase.getInstance().getReference("stories").child(storyId);
         chapterRef = FirebaseDatabase.getInstance().getReference("chapters").child(storyId);
         tagRef = FirebaseDatabase.getInstance().getReference("tags");
-        userRef = FirebaseDatabase.getInstance().getReference("users");
+        userRef = FirebaseDatabase.getInstance().getReference("users").child(currentUserId);
+        userRef2 = FirebaseDatabase.getInstance().getReference("users");
+        commentRef = FirebaseDatabase.getInstance().getReference("comments");
+        replyRef = FirebaseDatabase.getInstance().getReference("commentReplies");
+
+        // Gửi bình luận
+        btnSendComment.setOnClickListener(v -> sendComment());
 
         loadStory();
         loadChapters();
         loadTags();
+        loadComments();
+    }
+
+    private void sendComment() {
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    Boolean isMuted = snapshot.child("isMuted").getValue(Boolean.class);
+                    Long muteUntil = snapshot.child("muteUntil").getValue(Long.class);
+                    long now = System.currentTimeMillis();
+                    if (Boolean.TRUE.equals(isMuted) && muteUntil != null && muteUntil > now) {
+                        Toast.makeText(HomeStory.this, "Bạn đang bị chặn bình luận", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                }
+
+                // ✅ Thực hiện gửi bình luận bên trong đây
+                String content = edtComment.getText().toString().trim();
+                if (content.isEmpty()) {
+                    edtComment.setError("Vui lòng nhập nội dung");
+                    return;
+                }
+
+                String commentId = commentRef.push().getKey();
+                long timestamp = System.currentTimeMillis();
+
+                Comment comment = new Comment(
+                        commentId,
+                        currentUserId,
+                        storyId,
+                        null,
+                        null,
+                        content,
+                        timestamp,
+                        false, null, null,
+                        0,
+                        false, null
+                );
+
+                commentRef.child(commentId).setValue(comment)
+                        .addOnSuccessListener(unused -> {
+                            // ✅ Tăng commentCount
+                            DatabaseReference targetRef;
+                            if (chapterId == null || chapterId.isEmpty()) {
+                                targetRef = FirebaseDatabase.getInstance().getReference("stories").child(storyId);
+                            } else {
+                                targetRef = FirebaseDatabase.getInstance().getReference("chapters").child(storyId).child(chapterId);
+                            }
+
+                            targetRef.child("commentsCount").runTransaction(new Transaction.Handler() {
+                                @NonNull
+                                @Override
+                                public Transaction.Result doTransaction(@NonNull MutableData currentData) {
+                                    Long count = currentData.getValue(Long.class);
+                                    currentData.setValue((count == null ? 0 : count + 1));
+                                    return Transaction.success(currentData);
+                                }
+
+                                @Override
+                                public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
+                                    if (error != null) {
+                                        Log.e("CommentCountUpdate", "Transaction failed: " + error.getMessage());
+                                    } else if (!committed) {
+                                        Log.e("CommentCountUpdate", "Transaction not committed");
+                                    } else {
+                                        Log.d("CommentCountUpdate", "Comment count updated successfully");
+                                    }
+                                }
+                            });
+
+                            // ✅ Hiển thị lên giao diện
+                            commentList.add(0, comment);
+                            commentAdapter.notifyItemInserted(0);
+                            recyclerComment.scrollToPosition(0);
+                            edtComment.setText("");
+                        });
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Toast.makeText(HomeStory.this, "Lỗi kiểm tra tài khoản", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void loadComments() {
+        commentRef.orderByChild("storyId").equalTo(storyId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        commentList.clear();
+                        for (DataSnapshot snap : snapshot.getChildren()) {
+                            Comment c = snap.getValue(Comment.class);
+                            if (c != null && !c.isDeleted()) {
+                                commentList.add(0, c); // mới nhất trên cùng
+                            }
+                        }
+                        allComments.clear();
+                        allComments.addAll(commentList);
+                        currentCommentPage = 1;
+                        updateCommentPagination();
+
+                        // Sau khi load comment xong, load reply
+                        replyRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                replyMap.clear();
+                                for (DataSnapshot replyGroup : snapshot.getChildren()) {
+                                    String commentId = replyGroup.getKey();
+                                    List<CommentReply> replies = new ArrayList<>();
+                                    for (DataSnapshot replySnap : replyGroup.getChildren()) {
+                                        CommentReply reply = replySnap.getValue(CommentReply.class);
+                                        if (reply != null && !reply.isDeleted()) {
+                                            replies.add(reply);
+                                        }
+                                    }
+                                    replyMap.put(commentId, replies);
+                                }
+
+                                // Cập nhật adapter
+                                displayCurrentCommentPage();
+                                updateCommentTabStyles();
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {}
+                        });
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
+
+    }
+
+    private void updateCommentPagination() {
+        totalCommentPages = (int) Math.ceil((double) allComments.size() / commentsPerPage);
+        tabContainerComment.removeAllViews();
+        allCommentTabs.clear();
+
+        paginationScrollComment.setVisibility(View.VISIBLE);
+
+        for (int i = 1; i <= totalCommentPages; i++) {
+            final int pageNum = i;
+            TextView tab = createCommentTabTextView(pageNum);
+            tabContainerComment.addView(tab);
+            allCommentTabs.add(tab);
+        }
+
+        displayCurrentCommentPage();
+    }
+
+    private TextView createCommentTabTextView(int pageNum) {
+        TextView tab = new TextView(this);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(16, 2, 16, 2);
+        tab.setLayoutParams(params);
+        tab.setText(String.valueOf(pageNum));
+        tab.setTextSize(16);
+        tab.setPadding(40, 20, 40, 20);
+
+        if (pageNum == currentCommentPage) {
+            tab.setTextColor(getResources().getColor(R.color.white));
+            tab.setBackgroundResource(R.drawable.page_selected_bg);
+        } else {
+            tab.setTextColor(getResources().getColor(R.color.black));
+            tab.setBackgroundResource(R.drawable.page_unselected_bg);
+        }
+
+        tab.setOnClickListener(v -> {
+            currentCommentPage = pageNum;
+            updateCommentTabStyles();
+            displayCurrentCommentPage();
+        });
+
+        return tab;
+    }
+
+    private void updateCommentTabStyles() {
+        for (TextView tab : allCommentTabs) {
+            int tabNum = Integer.parseInt(tab.getText().toString());
+            if (tabNum == currentCommentPage) {
+                tab.setTextColor(getResources().getColor(R.color.white));
+                tab.setBackgroundResource(R.drawable.page_selected_bg);
+            } else {
+                tab.setTextColor(getResources().getColor(R.color.black));
+                tab.setBackgroundResource(R.drawable.page_unselected_bg);
+            }
+        }
+    }
+
+    private void displayCurrentCommentPage() {
+        int start = (currentCommentPage - 1) * commentsPerPage;
+        int end = Math.min(start + commentsPerPage, allComments.size());
+
+        List<Comment> subList = allComments.subList(start, end);
+        commentAdapter.setData(subList, replyMap);
+        recyclerComment.scrollToPosition(0);
     }
 
     private void loadChapters() {
@@ -138,39 +394,70 @@ public class HomeStory extends BaseActivity {
 
     private void updatePagination() {
         totalPages = (int) Math.ceil((double) chapterList.size() / itemsPerPage);
-        Log.d("HomeStoryDebug", "Tổng số trang: " + totalPages);
-        Log.d("HomeStoryDebug", "Tổng số trang: " + totalPages);
         tabContainerTop.removeAllViews();
+        tabContainerBottom.removeAllViews();
+        allPageTabs.clear();
 
         paginationScrollChapterTop.setVisibility(View.VISIBLE);
-        Log.d("HomeStoryDebug", "Đã hiển thị tabScroll");
+        paginationScrollChapterBottom.setVisibility(View.VISIBLE);
+
         for (int i = 1; i <= totalPages; i++) {
             final int pageNum = i;
 
-            // TẠO TEXTVIEW VỚI MARGIN, PADDING ĐẦY ĐỦ
-            TextView tab = new TextView(this);
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-            params.setMargins(16, 2, 16, 2);
-            tab.setLayoutParams(params);
+            TextView topTab = createTabTextView(pageNum);
+            TextView bottomTab = createTabTextView(pageNum);
 
-            tab.setText(String.valueOf(i));
-            tab.setTextSize(16);
-            tab.setPadding(40, 20, 40, 20); // padding giúp tab dễ bấm và dễ nhìn
-            tab.setTextColor(i == currentPage ? getResources().getColor(R.color.white) : getResources().getColor(R.color.black));
-            tab.setBackgroundResource(i == currentPage ? R.drawable.page_selected_bg : R.drawable.page_unselected_bg);
+            tabContainerTop.addView(topTab);
+            tabContainerBottom.addView(bottomTab);
 
-            tab.setOnClickListener(v -> {
-                currentPage = pageNum;
-                updatePagination(); // Cập nhật tab và trang hiện tại
-            });
-            Log.d("HomeStoryDebug", "Tạo tab trang " + i);
-            tabContainerTop.addView(tab);
-            Log.d("HomeStoryDebug", "Tổng số tab con: " + tabContainerTop.getChildCount());
+            allPageTabs.add(topTab);
+            allPageTabs.add(bottomTab);
         }
+
         displayCurrentPage();
+    }
+
+    private TextView createTabTextView(int pageNum) {
+        TextView tab = new TextView(this);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(16, 2, 16, 2);
+        tab.setLayoutParams(params);
+        tab.setText(String.valueOf(pageNum));
+        tab.setTextSize(16);
+        tab.setPadding(40, 20, 40, 20);
+
+        // Đặt màu và nền theo tab đang chọn
+        if (pageNum == currentPage) {
+            tab.setTextColor(getResources().getColor(R.color.white));
+            tab.setBackgroundResource(R.drawable.page_selected_bg);
+        } else {
+            tab.setTextColor(getResources().getColor(R.color.black));
+            tab.setBackgroundResource(R.drawable.page_unselected_bg);
+        }
+
+        tab.setOnClickListener(v -> {
+            currentPage = pageNum;
+            updateTabStyles();  // Cập nhật tất cả các tab
+            displayCurrentPage();
+        });
+
+        return tab;
+    }
+
+    private void updateTabStyles() {
+        for (TextView tab : allPageTabs) {
+            int tabNum = Integer.parseInt(tab.getText().toString());
+            if (tabNum == currentPage) {
+                tab.setTextColor(getResources().getColor(R.color.white));
+                tab.setBackgroundResource(R.drawable.page_selected_bg);
+            } else {
+                tab.setTextColor(getResources().getColor(R.color.black));
+                tab.setBackgroundResource(R.drawable.page_unselected_bg);
+            }
+        }
     }
 
     private void displayCurrentPage() {
@@ -220,13 +507,14 @@ public class HomeStory extends BaseActivity {
                 if (story == null) return;
                 currentStory = story;
                 authorId = story.getAuthorId();
-                userRef.orderByChild("userId").equalTo(authorId)
+                userRef2.orderByChild("userId").equalTo(authorId)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot snapshot) {
                                 for (DataSnapshot userSnap : snapshot.getChildren()) {
                                     authorName = userSnap.child("username").getValue(String.class);
                                     txtAuthorName.setText(authorName);
+                                    Log.d("HomeStory", "author name: "+ authorName);
                                 }
                             }
 
@@ -238,7 +526,7 @@ public class HomeStory extends BaseActivity {
 
                 // Gán dữ liệu vào giao diện
                 txtStoryName.setText(story.getTitle());
-                txtAuthorName.setText(authorName);
+//                txtAuthorName.setText(authorName);
                 txtEyes.setText(String.valueOf(story.getViewsCount()));
                 txtLike.setText(String.valueOf(story.getLikesCount()));
                 txtComments.setText(String.valueOf(story.getCommentsCount()));
@@ -247,11 +535,61 @@ public class HomeStory extends BaseActivity {
                 txtLatestUpdate.setText("Cập nhật: " + date);
                 txtNewChapter.setText("Chương mới: " + story.getLatestChapter().getTitle());
                 Glide.with(HomeStory.this).load(story.getCoverUrl()).into(imgCover);
+
+                userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        String avatarUrl = snapshot.child("avatarUrl").getValue(String.class);
+                        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                            Glide.with(getApplicationContext())
+                                    .load(avatarUrl)
+                                    .placeholder(R.drawable.ic_launcher_background)
+                                    .circleCrop()
+                                    .into(imgAvatarComment);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
+
+                loadOtherStoriesByAuthor(authorId, storyId);
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
         });
+    }
+
+    private void loadOtherStoriesByAuthor(String authorId, String currentStoryId) {
+        DatabaseReference storiesRef = FirebaseDatabase.getInstance().getReference("stories");
+
+        storiesRef.orderByChild("authorId").equalTo(authorId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        List<Story> otherStories = new ArrayList<>();
+                        for (DataSnapshot snap : snapshot.getChildren()) {
+                            Story story = snap.getValue(Story.class);
+                            if (story != null && !story.getStoryId().equals(currentStoryId)) {
+                                otherStories.add(story);
+                                if (otherStories.size() >= 4) break;
+                            }
+                        }
+
+                        if (!otherStories.isEmpty()) {
+                            txtGoiY.setVisibility(View.VISIBLE);
+                            recyclerViewGoiY.setVisibility(View.VISIBLE);
+                            storyAdapter.setData(otherStories);
+                        } else {
+                            txtGoiY.setVisibility(View.GONE);
+                            recyclerViewGoiY.setVisibility(View.GONE);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) { }
+                });
     }
 
     private void loadTags() {

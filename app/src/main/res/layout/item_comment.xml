@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/imageView6"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="15dp"
+        android:src="@drawable/ic_avatar" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- Thông tin người dùng và nội dung comment -->
+            <TextView
+                android:id="@+id/txtUserName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tên người dùng"
+                android:textColor="@color/blue"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/txtCommentTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2 giờ trước"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:paddingEnd="10dp"
+                android:textSize="12sp"
+                android:textColor="#888888"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtChapterTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tên chương"
+            android:textColor="@color/blue"/>
+
+        <TextView
+            android:id="@+id/txtCommentContent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nội dung bình luận"
+            android:layout_marginTop="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/txtReportButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cử báo"
+                android:gravity="end"
+                android:textColor="#2196F3"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/txtReplyButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Trả lời"
+                android:layout_marginStart="15dp"
+                android:layout_marginEnd="10dp"
+                android:textColor="#2196F3"
+                android:textStyle="bold"
+                android:layout_marginTop="4dp" />
+        </LinearLayout>
+
+        <!-- Danh sách reply lồng bên dưới -->
+        <LinearLayout
+            android:id="@+id/layoutReplies"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
+            android:paddingLeft="24dp" />
+
+        <!-- Ô nhập trả lời -->
+        <LinearLayout
+            android:id="@+id/replyInputLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            android:paddingTop="4dp">
+
+            <EditText
+                android:id="@+id/editTextReply"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Trả lời bình luận..."
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:background="@android:drawable/edit_text"
+                android:padding="8dp"/>
+
+            <Button
+                android:id="@+id/buttonSendReply"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Gửi" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

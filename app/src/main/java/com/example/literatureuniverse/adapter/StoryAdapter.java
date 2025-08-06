@@ -16,6 +16,11 @@ import com.bumptech.glide.Glide;
 import com.example.literatureuniverse.R;
 import com.example.literatureuniverse.activity.HomeStory;
 import com.example.literatureuniverse.model.Story;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -25,6 +30,7 @@ import java.util.Locale;
 public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryViewHolder> {
     private Context context;
     private List<Story> storyList;
+    private DatabaseReference userRef;
 
     public StoryAdapter(Context context, List<Story> storyList) {
         this.context = context;
@@ -55,17 +61,20 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryViewHol
 
         Log.d("TagStoryDEBUG", "Binding: " + story.getTitle());
 
-        // Ngày cập nhật
-        String date = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                .format(new Date(story.getUpdatedAt()));
-        holder.tvUpdatedAt.setText("Cập nhật: " + date);
+        userRef = FirebaseDatabase.getInstance().getReference("users");
+        userRef.orderByChild("userId").equalTo(story.getAuthorId())
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        for (DataSnapshot userSnap : snapshot.getChildren()) {
+                            String authorName = userSnap.child("username").getValue(String.class);
+                            holder.tvAuthor.setText(authorName);
+                        }
+                    }
 
-        // Chương mới nhất
-        if (story.getLatestChapter() != null) {
-            holder.tvLatestChapter.setText("Chương mới: " + story.getLatestChapter().getTitle());
-        } else {
-            holder.tvLatestChapter.setText("Chưa có chương");
-        }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
 
         holder.tvEyes.setText(String.valueOf(story.getViewsCount()));
         holder.tvLike.setText(String.valueOf(story.getLikesCount()));
@@ -101,14 +110,13 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryViewHol
     public static class StoryViewHolder extends RecyclerView.ViewHolder {
 
         ImageView imgCover;
-        TextView tvTitle, tvLatestChapter, tvUpdatedAt, tvStatus, tvWarning, tvEyes, tvLike, tvComments;
+        TextView tvTitle, tvAuthor, tvStatus, tvWarning, tvEyes, tvLike, tvComments;
 
         public StoryViewHolder(@NonNull View itemView) {
             super(itemView);
             imgCover = itemView.findViewById(R.id.imgCover);
             tvTitle = itemView.findViewById(R.id.tvTitle);
-            tvLatestChapter = itemView.findViewById(R.id.tvLatestChapter);
-            tvUpdatedAt = itemView.findViewById(R.id.tvUpdatedAt);
+            tvAuthor = itemView.findViewById(R.id.tvAuthor);
             tvStatus = itemView.findViewById(R.id.tvStatus);
             tvWarning = itemView.findViewById(R.id.tvWarning); // cảnh báo bị xóa
             tvEyes = itemView.findViewById(R.id.txtEyes);

@@ -47,6 +47,7 @@ public class TagStories extends BaseActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        setupHeader(); // bắt buộc gọi sau setContentView
 
         tvTitle = findViewById(R.id.tvTagTitle);
         rvStories = findViewById(R.id.rvTagStories);

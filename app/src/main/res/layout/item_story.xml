@@ -29,19 +29,12 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
-        <TextView android:id="@+id/tvLatestChapter"
-            android:text="Chương mới: ..."
-            android:maxLines="1"
-            android:textSize="14sp"
-            android:ellipsize="end"
+        <TextView
+            android:id="@+id/tvAuthor"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <TextView android:id="@+id/tvUpdatedAt"
-            android:text="Cập nhật: ..."
-            android:textSize="13sp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:text="Tác giả: ..."
+            android:textSize="13sp" />
 
         <TextView android:id="@+id/tvStatus"
             android:text="Trạng thái: ..."
@@ -72,6 +65,7 @@
                     android:id="@+id/txtEyes"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:paddingStart="7dp"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/imageView7"
                     android:text="TextView" />
@@ -94,6 +88,7 @@
                     android:id="@+id/txtLike"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:paddingStart="7dp"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/imageView8"
                     android:text="TextView" />
@@ -116,6 +111,7 @@
                     android:id="@+id/txtComments"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:paddingStart="7dp"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/imageView9"
                     android:text="TextView" />

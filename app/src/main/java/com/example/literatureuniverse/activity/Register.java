@@ -100,7 +100,7 @@ public class Register extends AppCompatActivity {
                             long createdAt = System.currentTimeMillis(); // 🌟 Thời gian đăng ký
 
                             // Bước 2: Tạo đối tượng user
-                            User newUser = new User(uid, username, email, avatarUrl, "reader", false, null, false, null, 0, createdAt, null, null);
+                            User newUser = new User(uid, username, email, avatarUrl, "reader", false, null, true, null, 0, createdAt, null, null);
 
                             // Bước 3: Ghi vào Realtime Database
                             DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("users");

@@ -8,6 +8,8 @@
     android:padding="16dp"
     tools:context=".activity.TagStories">
 
+    <include layout="@layout/header"/>
+
     <TextView
         android:id="@+id/tvTagTitle"
         android:text="Thể loại: ..."

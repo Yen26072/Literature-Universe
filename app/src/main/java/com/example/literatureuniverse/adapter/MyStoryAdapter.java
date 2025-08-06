@@ -99,7 +99,7 @@ public class MyStoryAdapter extends RecyclerView.Adapter<MyStoryAdapter.StoryVie
             imgCover = itemView.findViewById(R.id.imgCover);
             tvTitle = itemView.findViewById(R.id.tvTitle);
             tvLatestChapter = itemView.findViewById(R.id.tvLatestChapter);
-            tvUpdatedAt = itemView.findViewById(R.id.tvUpdatedAt);
+            tvUpdatedAt = itemView.findViewById(R.id.tvAuthor);
             tvStatus = itemView.findViewById(R.id.tvStatus);
             tvWarning = itemView.findViewById(R.id.tvWarning); // cảnh báo bị xóa
         }

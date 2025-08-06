@@ -165,7 +165,7 @@ public class AddChapter extends BaseActivity {
     }
 
     private void saveChapter(String title, String content) {
-        String chapterId = "chapter_" + System.currentTimeMillis();
+        String chapterId = chaptersRef.push().getKey();
 
         Chapter chapter = new Chapter();
         chapter.setChapterId(chapterId);
@@ -250,7 +250,7 @@ public class AddChapter extends BaseActivity {
             String body = lines.length > 1 ? lines[1].trim() : "";
 
             Chapter chapter = new Chapter();
-            chapter.setChapterId("chapter_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 5));
+            chapter.setChapterId(chaptersRef.push().getKey());
             chapter.setTitle(title);
             chapter.setContent(body);
             chapter.setStoryId(currentStory.getStoryId());
