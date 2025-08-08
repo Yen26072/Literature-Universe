@@ -13,6 +13,10 @@
         android:title="Thư viện"
         android:icon="@drawable/ic_library" />
     <item
+        android:id="@+id/menu_reading"
+        android:title="Đang đọc"
+        android:icon="@drawable/ic_reading" />
+    <item
         android:id="@+id/menu_mystory"
         android:title="Truyện của tôi"
         android:icon="@drawable/ic_my_story" />

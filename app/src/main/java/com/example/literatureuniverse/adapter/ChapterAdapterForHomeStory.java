@@ -47,7 +47,9 @@ public class ChapterAdapterForHomeStory extends RecyclerView.Adapter<ChapterAdap
         holder.itemView.setOnClickListener(v -> {
             Intent intent = new Intent(context, ChapterDetail.class);
             intent.putExtra("chapterTitle", chapter.getTitle());
+            intent.putExtra("storyId", chapter.getStoryId());
             intent.putExtra("chapterContent", chapter.getContent());
+            intent.putExtra("chapterId", chapter.getChapterId());
             context.startActivity(intent);
         });
     }

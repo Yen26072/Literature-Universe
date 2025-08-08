@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -7,6 +7,167 @@
     android:layout_height="match_parent"
     tools:context=".activity.ChapterDetail">
 
-    <include layout="@layout/header"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="5dp"
+        android:orientation="vertical">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <include layout="@layout/header" />
+
+        <TextView
+            android:id="@+id/txtStoryName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="30dp"
+            android:text="Tên truyện    jjjjjj   dđ ff ê rrrrr www aaa uuuu ooo "
+            android:textSize="28sp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:textColor="@color/black" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="30dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/txtPreviousChapter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="start"
+                android:textSize="18dp"
+                android:text="Chương trước" />
+
+            <TextView
+                android:id="@+id/txtHomeStory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="18dp"
+                android:gravity="center"
+                android:text="Mục lục" />
+
+            <TextView
+                android:id="@+id/txtNextChapter"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="18dp"
+                android:gravity="end"
+                android:text="Chương sau" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="100dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+            <ImageView
+                android:id="@+id/imgStar"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_weight="1"
+                app:tint="@color/gray"
+                android:src="@drawable/ic_star2"/>
+
+            <ImageView
+                android:id="@+id/imgPin"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_weight="1"
+                app:tint="@color/gray"
+                android:src="@drawable/ic_pin"/>
+
+            <ImageView
+                android:id="@+id/imgAdd"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_weight="1"
+                app:tint="@color/gray"
+                android:src="@drawable/ic_add2"/>
+
+            <ImageView
+                android:id="@+id/imgFont"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_weight="1"
+                android:src="@drawable/ic_font"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/txtChapterName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Tên chương"
+            android:textColor="@color/black"
+            android:layout_marginTop="10dp"
+            android:textSize="22sp"
+            android:gravity="center"/>
+
+        <TextView
+            android:id="@+id/txtAuthorName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Tên chương"
+            android:textColor="@color/black"
+            android:layout_marginTop="10dp"
+            android:textSize="18sp"
+            android:gravity="center"/>
+
+        <TextView
+            android:id="@+id/txtChapterContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:lineSpacingExtra="7dp"
+            android:textColor="@color/black"
+            android:layout_marginTop="15dp"
+            android:paddingHorizontal="5dp"
+            android:text="Dòng 1\nDongf 2\nDong3"
+            android:textSize="17sp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="30dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/txtPreviousChapter2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="18dp"
+                android:gravity="start"
+                android:text="Chương trước" />
+
+            <TextView
+                android:id="@+id/txtHomeStory2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="18dp"
+                android:gravity="center"
+                android:text="Mục lục" />
+
+            <TextView
+                android:id="@+id/txtNextChapter2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="18dp"
+                android:gravity="end"
+                android:text="Chương sau" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</ScrollView>

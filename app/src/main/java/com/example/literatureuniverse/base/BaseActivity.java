@@ -169,6 +169,7 @@ public class BaseActivity extends AppCompatActivity {
             popup.getMenu().findItem(R.id.menu_profile).setVisible(false);
             popup.getMenu().findItem(R.id.menu_mailbox).setVisible(false);
             popup.getMenu().findItem(R.id.menu_library).setVisible(false);
+            popup.getMenu().findItem(R.id.menu_reading).setVisible(false);
             popup.getMenu().findItem(R.id.menu_mystory).setVisible(false);
         }
 
