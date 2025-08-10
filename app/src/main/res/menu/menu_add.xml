@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_follow"
+        android:title="Theo dõi truyện"
+        android:checked="false"
+        android:checkable="true" />
+    <item
+        android:id="@+id/menu_library"
+        android:title="Thêm vào thư viện"
+        android:checked="false"
+        android:checkable="true" />
+</menu>

@@ -21,6 +21,16 @@ public class Story implements Serializable {
     private String modifiedBy;
     private long modifiedAt;
     private LatestChapter latestChapter;
+    // Trường tạm để sort, không lưu vào Firebase
+    private transient long sortTime;
+
+    public long getSortTime() {
+        return sortTime;
+    }
+
+    public void setSortTime(long sortTime) {
+        this.sortTime = sortTime;
+    }
 
     public String getStoryId() {
         return storyId;

@@ -39,6 +39,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:gravity="start"
+                android:textColor="@color/blue"
                 android:textSize="18dp"
                 android:text="Chương trước" />
 
@@ -48,6 +49,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:textSize="18dp"
+                android:textColor="@color/blue"
                 android:gravity="center"
                 android:text="Mục lục" />
 
@@ -57,6 +59,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:textSize="18dp"
+                android:textColor="@color/blue"
                 android:gravity="end"
                 android:text="Chương sau" />
         </LinearLayout>
@@ -146,6 +149,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:textSize="18dp"
+                android:textColor="@color/blue"
                 android:gravity="start"
                 android:text="Chương trước" />
 
@@ -155,6 +159,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:textSize="18dp"
+                android:textColor="@color/blue"
                 android:gravity="center"
                 android:text="Mục lục" />
 
@@ -164,6 +169,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:textSize="18dp"
+                android:textColor="@color/blue"
                 android:gravity="end"
                 android:text="Chương sau" />
         </LinearLayout>

@@ -181,7 +181,6 @@ public class HomeStory extends BaseActivity {
                     }
                 }
 
-                // ✅ Thực hiện gửi bình luận bên trong đây
                 String content = edtComment.getText().toString().trim();
                 if (content.isEmpty()) {
                     edtComment.setError("Vui lòng nhập nội dung");
@@ -206,7 +205,6 @@ public class HomeStory extends BaseActivity {
 
                 commentRef.child(commentId).setValue(comment)
                         .addOnSuccessListener(unused -> {
-                            // ✅ Tăng commentCount
                             DatabaseReference targetRef;
                             if (chapterId == null || chapterId.isEmpty()) {
                                 targetRef = FirebaseDatabase.getInstance().getReference("stories").child(storyId);
@@ -227,18 +225,25 @@ public class HomeStory extends BaseActivity {
                                 public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
                                     if (error != null) {
                                         Log.e("CommentCountUpdate", "Transaction failed: " + error.getMessage());
-                                    } else if (!committed) {
-                                        Log.e("CommentCountUpdate", "Transaction not committed");
-                                    } else {
-                                        Log.d("CommentCountUpdate", "Comment count updated successfully");
                                     }
                                 }
                             });
 
-                            // ✅ Hiển thị lên giao diện
-                            commentList.add(0, comment);
-                            commentAdapter.notifyItemInserted(0);
-                            recyclerComment.scrollToPosition(0);
+                            // ✅ Thêm comment mới vào list gốc rồi cập nhật phân trang
+                            recyclerComment.post(() -> {
+                                allComments.add(0, comment);
+                                totalCommentPages = (int) Math.ceil((double) allComments.size() / commentsPerPage);
+
+                                // Nếu đang ở trang 1 thì hiển thị ngay
+                                if (currentCommentPage == 1) {
+                                    displayCurrentCommentPage();
+                                    recyclerComment.scrollToPosition(0);
+                                } else {
+                                    // Nếu không ở trang 1 thì có thể load lại tab hoặc thông báo
+                                    updateCommentPagination();
+                                }
+                            });
+
                             edtComment.setText("");
                         });
             }
@@ -249,6 +254,7 @@ public class HomeStory extends BaseActivity {
             }
         });
     }
+
 
     private void loadComments() {
         commentRef.orderByChild("storyId").equalTo(storyId)
@@ -369,27 +375,29 @@ public class HomeStory extends BaseActivity {
     }
 
     private void loadChapters() {
-        chapterRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                chapterList.clear();
-                for (DataSnapshot chapterSnap : snapshot.getChildren()) {
-                    Chapter chapter = chapterSnap.getValue(Chapter.class);
-                    if (chapter != null) {
-                        chapterList.add(chapter);
-                        Log.d("ChapterDebug", "✔ Thêm chương: " + chapter.getTitle());
-                    } else {
-                        Log.w("ChapterDebug", "Chương bị null: " + chapterSnap.getKey());
-                    }
-                }
-                currentPage = 1;
-                updatePagination();
-                Log.d("ChapterDebug", "Tổng số chương load được: " + chapterList.size());
-            }
+        chapterRef.orderByChild("createdAt") // ✅ Sắp xếp theo thời gian
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        chapterList.clear();
+                        for (DataSnapshot chapterSnap : snapshot.getChildren()) {
+                            Chapter chapter = chapterSnap.getValue(Chapter.class);
+                            if (chapter != null) {
+                                chapterList.add(chapter); // mặc định là từ cũ -> mới
+                                Log.d("ChapterDebug", "✔ Thêm chương: " + chapter.getTitle() + " | createdAt: " + chapter.getCreatedAt());
+                            } else {
+                                Log.w("ChapterDebug", "Chương bị null: " + chapterSnap.getKey());
+                            }
+                        }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
+                        currentPage = 1;
+                        updatePagination();
+                        Log.d("ChapterDebug", "Tổng số chương load được: " + chapterList.size());
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
     }
 
     private void updatePagination() {

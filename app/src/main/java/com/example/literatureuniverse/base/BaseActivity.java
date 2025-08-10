@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.example.literatureuniverse.R;
+import com.example.literatureuniverse.activity.FollowingStory;
 import com.example.literatureuniverse.activity.HomeAdminSuper;
 import com.example.literatureuniverse.activity.Login;
 import com.example.literatureuniverse.activity.MailBox;
@@ -168,6 +169,7 @@ public class BaseActivity extends AppCompatActivity {
         if ("admin_super".equals(currentRole)) {
             popup.getMenu().findItem(R.id.menu_profile).setVisible(false);
             popup.getMenu().findItem(R.id.menu_mailbox).setVisible(false);
+            popup.getMenu().findItem(R.id.menu_follow).setVisible(false);
             popup.getMenu().findItem(R.id.menu_library).setVisible(false);
             popup.getMenu().findItem(R.id.menu_reading).setVisible(false);
             popup.getMenu().findItem(R.id.menu_mystory).setVisible(false);
@@ -205,6 +207,11 @@ public class BaseActivity extends AppCompatActivity {
             }
             if(id==R.id.menu_mystory){
                 Intent intent = new Intent(BaseActivity.this, MyStory.class);
+                startActivity(intent);
+                return true;
+            }
+            if(id==R.id.menu_follow){
+                Intent intent = new Intent(BaseActivity.this, FollowingStory.class);
                 startActivity(intent);
                 return true;
             }
