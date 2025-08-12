@@ -167,6 +167,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             @Override
             public void onClick(View v) {
                 holder.replyInputLayout.setVisibility(View.VISIBLE);
+                holder.editTextReply.requestFocus();
             }
         });
         // ✅ XỬ LÝ SỰ KIỆN GỬI REPLY

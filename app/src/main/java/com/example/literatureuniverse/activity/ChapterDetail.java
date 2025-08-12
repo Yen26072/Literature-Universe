@@ -12,9 +12,14 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.PopupWindow;
 import android.widget.ScrollView;
@@ -29,12 +34,18 @@ import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.literatureuniverse.R;
+import com.example.literatureuniverse.adapter.CommentAdapter;
 import com.example.literatureuniverse.base.BaseActivity;
 import com.example.literatureuniverse.model.Chapter;
+import com.example.literatureuniverse.model.Comment;
+import com.example.literatureuniverse.model.CommentReply;
 import com.example.literatureuniverse.model.Story;
+import com.example.literatureuniverse.model.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -58,7 +69,7 @@ import java.util.Map;
 public class ChapterDetail extends BaseActivity {
     ImageView imgStar, imgPin, imgAdd, imgFont;
     TextView txtPreviousChapter, txtNextChapter, txtTitle, txtContent, txtStoryName, txtAuthorName, txtPreviousChapter2, txtNextChapter2, txtStoryHome;
-    private DatabaseReference storyRef, likesRef, userRef2, chapterRef, bookmarkRef, followRef, libraryRef;
+    private DatabaseReference storyRef, likesRef, userRef2, userRef, chapterRef, bookmarkRef, followRef, libraryRef, commentRef, commentRef2, replyRef;
     private String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
     private String storyId, currentChapterId;
     private List<Chapter> chapterList = new ArrayList<>();
@@ -67,6 +78,21 @@ public class ChapterDetail extends BaseActivity {
     private boolean isFollowing = false; // trạng thái hiện tại
     private SharedPreferences prefs;
     private static final String PREF_NAME = "reader_settings";
+    ImageView imgAvatarComment;
+    private EditText edtComment;
+    private Button btnSendComment;
+    private RecyclerView recyclerComment;
+    private HashMap<String, User> userMap = new HashMap<>();
+    private List<Comment> commentList = new ArrayList<>();
+    private Map<String, List<CommentReply>> replyMap = new HashMap<>();
+    private CommentAdapter commentAdapter;
+    private List<Comment> allComments = new ArrayList<>();
+    private List<TextView> allCommentTabs = new ArrayList<>();
+    private int currentCommentPage = 1;
+    private int totalCommentPages = 1;
+    private int commentsPerPage = 3; // hoặc số dòng bạn muốn hiển thị
+    private LinearLayout tabContainerComment;
+    private HorizontalScrollView paginationScrollComment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,18 +120,37 @@ public class ChapterDetail extends BaseActivity {
         txtNextChapter2 = findViewById(R.id.txtNextChapter2);
         txtStoryHome = findViewById(R.id.txtHomeStory);
         scrollView = findViewById(R.id.main);
+        imgAvatarComment = findViewById(R.id.imgAvatarComment);
+        edtComment = findViewById(R.id.edtComment);
+        btnSendComment = findViewById(R.id.btnSendComment);
+        recyclerComment = findViewById(R.id.recyclerComment);
+        tabContainerComment = findViewById(R.id.tabContainerComment);
+        paginationScrollComment = findViewById(R.id.tabScrollComment);
+
+        scrollView.requestFocus();
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
 
         storyId = getIntent().getStringExtra("storyId");
         currentChapterId = getIntent().getStringExtra("chapterId");
         prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
 
+        recyclerComment.setLayoutManager(new LinearLayoutManager(this));
+        commentAdapter = new CommentAdapter(this, new ArrayList<>(), replyMap, userMap);
+        recyclerComment.setAdapter(commentAdapter);
+
         storyRef = FirebaseDatabase.getInstance().getReference("stories").child(storyId);
         likesRef = FirebaseDatabase.getInstance().getReference("likes").child(storyId);
+        userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
         userRef2 = FirebaseDatabase.getInstance().getReference("users");
         chapterRef = FirebaseDatabase.getInstance().getReference("chapters").child(storyId);
         bookmarkRef = FirebaseDatabase.getInstance().getReference("bookmarks").child(userId).child(storyId);
         followRef = FirebaseDatabase.getInstance().getReference("follows").child(userId).child(storyId);
         libraryRef = FirebaseDatabase.getInstance().getReference("libraries").child(userId).child(storyId);
+        commentRef = FirebaseDatabase.getInstance().getReference("comments");
+        replyRef = FirebaseDatabase.getInstance().getReference("commentReplies");
+
+        // Gửi bình luận
+        btnSendComment.setOnClickListener(v -> sendComment());
 
         // Khi mở chương → kiểm tra đã like chưa
         likesRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -177,6 +222,205 @@ public class ChapterDetail extends BaseActivity {
         // Áp dụng cấu hình đã lưu
         applySavedSettings();
         imgFont.setOnClickListener(v -> showFontSettingsPopup(v));
+    }
+
+    private void loadComments() {
+        commentRef.orderByChild("chapterId").equalTo(currentChapterId)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        commentList.clear();
+                        for (DataSnapshot snap : snapshot.getChildren()) {
+                            Comment c = snap.getValue(Comment.class);
+                            if (c != null && !c.isDeleted()) {
+                                commentList.add(0, c); // mới nhất trên cùng
+                            }
+                        }
+                        allComments.clear();
+                        allComments.addAll(commentList);
+                        currentCommentPage = 1;
+                        updateCommentPagination();
+
+                        // Sau khi load comment xong, load reply
+                        replyRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                replyMap.clear();
+                                for (DataSnapshot replyGroup : snapshot.getChildren()) {
+                                    String commentId = replyGroup.getKey();
+                                    List<CommentReply> replies = new ArrayList<>();
+                                    for (DataSnapshot replySnap : replyGroup.getChildren()) {
+                                        CommentReply reply = replySnap.getValue(CommentReply.class);
+                                        if (reply != null && !reply.isDeleted()) {
+                                            replies.add(reply);
+                                        }
+                                    }
+                                    replyMap.put(commentId, replies);
+                                }
+
+                                // Cập nhật adapter
+                                displayCurrentCommentPage();
+                                updateCommentTabStyles();
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {}
+                        });
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
+
+    }
+
+    private void sendComment() {
+        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    Boolean isMuted = snapshot.child("isMuted").getValue(Boolean.class);
+                    Long muteUntil = snapshot.child("muteUntil").getValue(Long.class);
+                    long now = System.currentTimeMillis();
+                    if (Boolean.TRUE.equals(isMuted) && muteUntil != null && muteUntil > now) {
+                        Toast.makeText(ChapterDetail.this, "Bạn đang bị chặn bình luận", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                }
+
+                String content = edtComment.getText().toString().trim();
+                if (content.isEmpty()) {
+                    edtComment.setError("Vui lòng nhập nội dung");
+                    return;
+                }
+
+                String commentId = commentRef.push().getKey();
+                long timestamp = System.currentTimeMillis();
+
+                Comment comment = new Comment(
+                        commentId,
+                        userId,
+                        storyId,
+                        currentChapterId,
+                        null,
+                        content,
+                        timestamp,
+                        false, null, null,
+                        0,
+                        false, null
+                );
+
+                commentRef.child(commentId).setValue(comment)
+                        .addOnSuccessListener(unused -> {
+                            storyRef.child("commentsCount").runTransaction(new Transaction.Handler() {
+                                @NonNull
+                                @Override
+                                public Transaction.Result doTransaction(@NonNull MutableData currentData) {
+                                    Long count = currentData.getValue(Long.class);
+                                    currentData.setValue((count == null ? 0 : count + 1));
+                                    return Transaction.success(currentData);
+                                }
+
+                                @Override
+                                public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
+                                    if (error != null) {
+                                        Log.e("CommentCountUpdate", "Transaction failed: " + error.getMessage());
+                                    }
+                                }
+                            });
+
+                            // ✅ Thêm comment mới vào list gốc rồi cập nhật phân trang
+                            recyclerComment.post(() -> {
+                                allComments.add(0, comment);
+                                totalCommentPages = (int) Math.ceil((double) allComments.size() / commentsPerPage);
+
+                                // Nếu đang ở trang 1 thì hiển thị ngay
+                                if (currentCommentPage == 1) {
+                                    displayCurrentCommentPage();
+                                    recyclerComment.scrollToPosition(0);
+                                } else {
+                                    // Nếu không ở trang 1 thì có thể load lại tab hoặc thông báo
+                                    updateCommentPagination();
+                                }
+                            });
+
+                            edtComment.setText("");
+                        });
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Toast.makeText(ChapterDetail.this, "Lỗi kiểm tra tài khoản", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void updateCommentPagination() {
+        totalCommentPages = (int) Math.ceil((double) allComments.size() / commentsPerPage);
+        tabContainerComment.removeAllViews();
+        allCommentTabs.clear();
+
+        paginationScrollComment.setVisibility(View.VISIBLE);
+
+        for (int i = 1; i <= totalCommentPages; i++) {
+            final int pageNum = i;
+            TextView tab = createCommentTabTextView(pageNum);
+            tabContainerComment.addView(tab);
+            allCommentTabs.add(tab);
+        }
+
+        displayCurrentCommentPage();
+    }
+
+    private TextView createCommentTabTextView(int pageNum) {
+        TextView tab = new TextView(this);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(16, 2, 16, 2);
+        tab.setLayoutParams(params);
+        tab.setText(String.valueOf(pageNum));
+        tab.setTextSize(16);
+        tab.setPadding(40, 20, 40, 20);
+
+        if (pageNum == currentCommentPage) {
+            tab.setTextColor(getResources().getColor(R.color.white));
+            tab.setBackgroundResource(R.drawable.page_selected_bg);
+        } else {
+            tab.setTextColor(getResources().getColor(R.color.black));
+            tab.setBackgroundResource(R.drawable.page_unselected_bg);
+        }
+
+        tab.setOnClickListener(v -> {
+            currentCommentPage = pageNum;
+            updateCommentTabStyles();
+            displayCurrentCommentPage();
+        });
+
+        return tab;
+    }
+
+    private void updateCommentTabStyles() {
+        for (TextView tab : allCommentTabs) {
+            int tabNum = Integer.parseInt(tab.getText().toString());
+            if (tabNum == currentCommentPage) {
+                tab.setTextColor(getResources().getColor(R.color.white));
+                tab.setBackgroundResource(R.drawable.page_selected_bg);
+            } else {
+                tab.setTextColor(getResources().getColor(R.color.black));
+                tab.setBackgroundResource(R.drawable.page_unselected_bg);
+            }
+        }
+    }
+
+    private void displayCurrentCommentPage() {
+        int start = (currentCommentPage - 1) * commentsPerPage;
+        int end = Math.min(start + commentsPerPage, allComments.size());
+
+        List<Comment> subList = allComments.subList(start, end);
+        commentAdapter.setData(subList, replyMap);
+        recyclerComment.scrollToPosition(0);
     }
 
     private void applySavedSettings() {
@@ -401,6 +645,7 @@ public class ChapterDetail extends BaseActivity {
         txtNextChapter2.setText("Chương sau >");
 
         loadImgPinStatus(currentChapterId);
+        loadComments();
 
         if (!firstChapter){
             storyRef.child("viewsCount").runTransaction(new Transaction.Handler() {
@@ -418,7 +663,6 @@ public class ChapterDetail extends BaseActivity {
 
                 @Override
                 public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
-                    // Log hoặc xử lý sau khi cập nhật xong
                 }
             });
         }
