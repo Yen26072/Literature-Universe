@@ -81,8 +81,12 @@ public class Login extends AppCompatActivity {
     }
 
     private void checkAccount(String email, String password) {
+        long startTime = System.currentTimeMillis();
+        Log.d("LoginDebug", "Bắt đầu đăng nhập: " + email);
         FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(task -> {
+                    long authTime = System.currentTimeMillis();
+                    Log.d("LoginDebug", "Auth hoàn thành sau " + (authTime - startTime) + " ms");
                     if (task.isSuccessful()) {
                         Log.d("LoginDebug", "Đăng nhập thành công");
                         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();

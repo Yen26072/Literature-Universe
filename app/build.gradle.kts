@@ -56,4 +56,10 @@ dependencies {
     implementation("com.google.firebase:firebase-storage")
 
     implementation("com.google.android.flexbox:flexbox:3.0.0")
+
+    // Firebase App Check core
+    implementation("com.google.firebase:firebase-appcheck:17.1.1")
+
+    // Debug provider (dùng khi tắt App Check hoặc test local)
+    implementation("com.google.firebase:firebase-appcheck-debug:17.1.1")
 }

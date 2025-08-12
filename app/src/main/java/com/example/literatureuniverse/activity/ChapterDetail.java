@@ -1,13 +1,24 @@
 package com.example.literatureuniverse.activity;
 
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.Typeface;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
+import android.widget.PopupWindow;
 import android.widget.ScrollView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,11 +40,15 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.MutableData;
 import com.google.firebase.database.ServerValue;
+import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.annotations.Nullable;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +65,8 @@ public class ChapterDetail extends BaseActivity {
     private int currentIndex = -1;
     ScrollView scrollView;
     private boolean isFollowing = false; // trạng thái hiện tại
+    private SharedPreferences prefs;
+    private static final String PREF_NAME = "reader_settings";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +97,7 @@ public class ChapterDetail extends BaseActivity {
 
         storyId = getIntent().getStringExtra("storyId");
         currentChapterId = getIntent().getStringExtra("chapterId");
+        prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
 
         storyRef = FirebaseDatabase.getInstance().getReference("stories").child(storyId);
         likesRef = FirebaseDatabase.getInstance().getReference("likes").child(storyId);
@@ -148,13 +166,124 @@ public class ChapterDetail extends BaseActivity {
 
         loadStory();
         loadChaptersFromFirebase();
-        txtPreviousChapter.setOnClickListener(v -> showChapter(currentIndex - 1));
-        txtNextChapter.setOnClickListener(v -> showChapter(currentIndex + 1));
-        txtPreviousChapter2.setOnClickListener(v -> showChapter(currentIndex - 1));
-        txtNextChapter2.setOnClickListener(v -> showChapter(currentIndex + 1));
+        txtPreviousChapter.setOnClickListener(v -> showChapter(currentIndex - 1, false));
+        txtNextChapter.setOnClickListener(v -> showChapter(currentIndex + 1, false));
+        txtPreviousChapter2.setOnClickListener(v -> showChapter(currentIndex - 1, false));
+        txtNextChapter2.setOnClickListener(v -> showChapter(currentIndex + 1, false));
 
         // 🔹 Xử lý khi nhấn vào imgAdd
         imgAdd.setOnClickListener(v -> showPopupMenu(v));
+
+        // Áp dụng cấu hình đã lưu
+        applySavedSettings();
+        imgFont.setOnClickListener(v -> showFontSettingsPopup(v));
+    }
+
+    private void applySavedSettings() {
+        String font = prefs.getString("font", "sans-serif");
+        int size = prefs.getInt("size", 16);
+        float lineSpacing = prefs.getFloat("line", 1.5f);
+        int bgColor = prefs.getInt("bgColor", Color.WHITE);
+
+        txtContent.setTypeface(Typeface.create(font, Typeface.NORMAL));
+        txtContent.setTextSize(TypedValue.COMPLEX_UNIT_SP, size);
+        txtContent.setLineSpacing(0, lineSpacing);
+        txtContent.setBackgroundColor(bgColor);
+    }
+
+    private void saveSetting(String key, Object value) {
+        SharedPreferences.Editor editor = prefs.edit();
+        if (value instanceof String) {
+            editor.putString(key, (String) value);
+        } else if (value instanceof Integer) {
+            editor.putInt(key, (Integer) value);
+        } else if (value instanceof Float) {
+            editor.putFloat(key, (Float) value);
+        }
+        editor.apply();
+    }
+
+    private void showFontSettingsPopup(View anchor) {
+        View popupView = LayoutInflater.from(this).inflate(R.layout.popup_font_settings, null);
+
+        PopupWindow popupWindow = new PopupWindow(popupView,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                true);
+
+        popupWindow.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        popupWindow.setOutsideTouchable(true);
+
+        Spinner spFont = popupView.findViewById(R.id.spFont);
+        Spinner spSize = popupView.findViewById(R.id.spSize);
+        Spinner spLine = popupView.findViewById(R.id.spLine);
+
+        View bgColor1 = popupView.findViewById(R.id.bgColor1);
+        View bgColor2 = popupView.findViewById(R.id.bgColor2);
+        View bgColor3 = popupView.findViewById(R.id.bgColor3);
+        View bgColor4 = popupView.findViewById(R.id.bgColor4);
+        View bgColor5 = popupView.findViewById(R.id.bgColor5);
+
+        // Dữ liệu
+        String[] fonts = {"sans-serif", "serif", "monospace"};
+        Integer[] sizes = {14, 16, 18, 20, 22, 24};
+        String[] lines = {"1.2", "1.5", "1.8", "2.0"};
+
+        spFont.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, fonts));
+        spSize.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, sizes));
+        spLine.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, lines));
+
+        // Khôi phục giá trị đã chọn
+        spFont.setSelection(Arrays.asList(fonts).indexOf(prefs.getString("font", "sans-serif")));
+        spSize.setSelection(Arrays.asList(sizes).indexOf(prefs.getInt("size", 16)));
+        spLine.setSelection(Arrays.asList(lines).indexOf(String.valueOf(prefs.getFloat("line", 1.5f))));
+
+        // Chọn font
+        spFont.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String font = fonts[position];
+                txtContent.setTypeface(Typeface.create(font, Typeface.NORMAL));
+                saveSetting("font", font);
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        // Chọn size
+        spSize.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                int size = sizes[position];
+                txtContent.setTextSize(TypedValue.COMPLEX_UNIT_SP, size);
+                saveSetting("size", size);
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        // Chọn line height
+        spLine.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                float lineSpacing = Float.parseFloat(lines[position]);
+                txtContent.setLineSpacing(0, lineSpacing);
+                saveSetting("line", lineSpacing);
+            }
+            @Override public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        // Đổi màu nền
+        View.OnClickListener bgClickListener = v -> {
+            int color = ((ColorDrawable) v.getBackground()).getColor();
+            txtContent.setBackgroundColor(color);
+            saveSetting("bgColor", color);
+        };
+        bgColor1.setOnClickListener(bgClickListener);
+        bgColor2.setOnClickListener(bgClickListener);
+        bgColor3.setOnClickListener(bgClickListener);
+        bgColor4.setOnClickListener(bgClickListener);
+        bgColor5.setOnClickListener(bgClickListener);
+
+        popupWindow.showAsDropDown(anchor);
     }
 
     private void showPopupMenu(View anchorView) {
@@ -257,10 +386,9 @@ public class ChapterDetail extends BaseActivity {
         });
     }
 
-    private void showChapter(int index) {
+    private void showChapter(int index, boolean firstChapter) {
         if (index < 0 || index >= chapterList.size()) return;
 
-        scrollView.post(() -> scrollView.fullScroll(ScrollView.FOCUS_UP));
         currentIndex = index;
         Chapter chapter = chapterList.get(index);
         currentChapterId = chapter.getChapterId();
@@ -274,11 +402,34 @@ public class ChapterDetail extends BaseActivity {
 
         loadImgPinStatus(currentChapterId);
 
+        if (!firstChapter){
+            storyRef.child("viewsCount").runTransaction(new Transaction.Handler() {
+                @NonNull
+                @Override
+                public Transaction.Result doTransaction(@NonNull MutableData currentData) {
+                    Integer currentValue = currentData.getValue(Integer.class);
+                    if (currentValue == null) {
+                        currentData.setValue(1);
+                    } else {
+                        currentData.setValue(currentValue + 1);
+                    }
+                    return Transaction.success(currentData);
+                }
+
+                @Override
+                public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
+                    // Log hoặc xử lý sau khi cập nhật xong
+                }
+            });
+        }
+
         // Ẩn hiện nút
         txtPreviousChapter.setVisibility(currentIndex == 0 ? View.GONE : View.VISIBLE);
         txtNextChapter.setVisibility(currentIndex == chapterList.size() - 1 ? View.GONE : View.VISIBLE);
         txtPreviousChapter2.setVisibility(currentIndex == 0 ? View.GONE : View.VISIBLE);
         txtNextChapter2.setVisibility(currentIndex == chapterList.size() - 1 ? View.GONE : View.VISIBLE);
+        // Cuộn lên đầu sau khi view đã render xong
+        scrollView.postDelayed(() -> scrollView.fullScroll(ScrollView.FOCUS_UP), 50);
     }
 
     private void loadImgPinStatus(String currentChapterId) {
@@ -318,7 +469,25 @@ public class ChapterDetail extends BaseActivity {
 
                 // Hiển thị chương
                 if (currentIndex != -1) {
-                    showChapter(currentIndex);
+                    storyRef.child("viewsCount").runTransaction(new Transaction.Handler() {
+                        @NonNull
+                        @Override
+                        public Transaction.Result doTransaction(@NonNull MutableData currentData) {
+                            Integer currentValue = currentData.getValue(Integer.class);
+                            if (currentValue == null) {
+                                currentData.setValue(1);
+                            } else {
+                                currentData.setValue(currentValue + 1);
+                            }
+                            return Transaction.success(currentData);
+                        }
+
+                        @Override
+                        public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
+                            showChapter(currentIndex, true);
+                        }
+                    });
+
                 }
             }
 
