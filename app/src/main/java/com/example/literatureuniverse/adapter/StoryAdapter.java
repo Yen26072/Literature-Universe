@@ -83,14 +83,16 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryViewHol
         // Ảnh bìa
         Glide.with(context).load(story.getCoverUrl()).into(holder.imgCover);
 
-        // Nếu truyện bị xóa thì hiển thị cảnh báo, vẫn cho nhấn
+        // Nếu truyện bị xóa thì hiển thị cảnh báo
         if (story.isDeleted()) {
             holder.tvWarning.setVisibility(View.VISIBLE);
             holder.tvWarning.setText("⚠ Truyện đã bị xóa");
             holder.itemView.setAlpha(0.6f);
+            holder.itemView.setEnabled(false); // Không cho click
         } else {
             holder.tvWarning.setVisibility(View.GONE);
             holder.itemView.setAlpha(1f);
+            holder.itemView.setEnabled(true); // Cho click lại
         }
 
         // Nhấn vào để xem chi tiết

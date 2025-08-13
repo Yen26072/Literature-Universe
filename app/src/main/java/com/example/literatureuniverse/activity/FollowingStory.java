@@ -2,6 +2,8 @@ package com.example.literatureuniverse.activity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -36,6 +38,13 @@ public class FollowingStory extends BaseActivity {
     FollowStoryAdapter followStoryAdapter;
     RecyclerView recyclerView;
 
+    private int itemsPerPage = 2;
+    private int currentPage = 1;
+    private int totalPages = 1;
+
+    LinearLayout pageTabsLayout;
+    HorizontalScrollView paginationScroll;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,6 +59,8 @@ public class FollowingStory extends BaseActivity {
         Log.d("FOLLOWINGSTORY", "userId = " + currentUserId);
 
         recyclerView = findViewById(R.id.recyclerFollowStory);
+        pageTabsLayout = findViewById(R.id.tabContainerStory);
+        paginationScroll = findViewById(R.id.tabScrollStory);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         followStoryAdapter = new FollowStoryAdapter(this, new ArrayList<>());

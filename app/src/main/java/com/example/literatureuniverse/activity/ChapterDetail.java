@@ -93,6 +93,7 @@ public class ChapterDetail extends BaseActivity {
     private int commentsPerPage = 3; // hoặc số dòng bạn muốn hiển thị
     private LinearLayout tabContainerComment;
     private HorizontalScrollView paginationScrollComment;
+    Map<String, Object> bookmarkData = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -192,20 +193,32 @@ public class ChapterDetail extends BaseActivity {
             });
         });
 
+        bookmarkData.put("chapterId", currentChapterId);
+        bookmarkData.put("timestamp", System.currentTimeMillis());
         // Khi bấm icon ghim
         imgPin.setOnClickListener(v -> {
             bookmarkRef.get().addOnSuccessListener(snapshot -> {
-                if (snapshot.exists() && currentChapterId.equals(snapshot.getValue(String.class))) {
-                    // Nếu đang ghim chính nó → bỏ ghim
-                    bookmarkRef.removeValue().addOnSuccessListener(aVoid -> {
-                        imgPin.setColorFilter(ContextCompat.getColor(this, R.color.gray));
-                    });
-                } else {
-                    // Ghim chương mới (ghi đè chương cũ)
-                    bookmarkRef.setValue(currentChapterId).addOnSuccessListener(aVoid -> {
-                        imgPin.setColorFilter(ContextCompat.getColor(this, R.color.red));
-                    });
+                if (snapshot.exists()) {
+                    String savedChapterId = snapshot.child("chapterId").getValue(String.class);
+                    if (currentChapterId.equals(savedChapterId)) {
+                        // Nếu đang ghim chính nó → bỏ ghim
+                        bookmarkRef.removeValue().addOnSuccessListener(aVoid -> {
+                            imgPin.setColorFilter(ContextCompat.getColor(this, R.color.gray));
+                            Toast.makeText(this, "Đã bỏ bookmark", Toast.LENGTH_SHORT).show();
+                        });
+                        return;
+                    }
                 }
+
+                // Ghim chương mới (ghi đè chương cũ)
+                bookmarkRef.setValue(bookmarkData)
+                        .addOnSuccessListener(aVoid -> {
+                            imgPin.setColorFilter(ContextCompat.getColor(this, R.color.red));
+                            Toast.makeText(this, "Đã lưu bookmark", Toast.LENGTH_SHORT).show();
+                        })
+                        .addOnFailureListener(e -> {
+                            Toast.makeText(this, "Lỗi lưu bookmark", Toast.LENGTH_SHORT).show();
+                        });
             });
         });
 
@@ -679,8 +692,9 @@ public class ChapterDetail extends BaseActivity {
     private void loadImgPinStatus(String currentChapterId) {
         bookmarkRef.get().addOnSuccessListener(snapshot -> {
             if (snapshot.exists()) {
-                String savedChapterId = snapshot.getValue(String.class);
+                String savedChapterId = snapshot.child("chapterId").getValue(String.class);
                 if (currentChapterId.equals(savedChapterId)) {
+                    // Nếu đã bookmark chương này
                     imgPin.setColorFilter(ContextCompat.getColor(this, R.color.red));
                 } else {
                     imgPin.setColorFilter(ContextCompat.getColor(this, R.color.gray));

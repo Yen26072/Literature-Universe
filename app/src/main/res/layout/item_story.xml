@@ -121,7 +121,7 @@
         <TextView android:id="@+id/tvWarning"
             android:textColor="@color/red"
             android:textSize="13sp"
-            android:text="⚠ Truyện đã bị admin xóa"
+            android:text="⚠ Truyện đã bị xóa"
             android:visibility="gone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />

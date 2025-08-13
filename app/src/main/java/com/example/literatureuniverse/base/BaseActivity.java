@@ -19,6 +19,7 @@ import com.example.literatureuniverse.activity.Login;
 import com.example.literatureuniverse.activity.MailBox;
 import com.example.literatureuniverse.activity.MainActivity;
 import com.example.literatureuniverse.activity.MyStory;
+import com.example.literatureuniverse.activity.Reading;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.*;
@@ -212,6 +213,11 @@ public class BaseActivity extends AppCompatActivity {
             }
             if(id==R.id.menu_follow){
                 Intent intent = new Intent(BaseActivity.this, FollowingStory.class);
+                startActivity(intent);
+                return true;
+            }
+            if(id==R.id.menu_reading){
+                Intent intent = new Intent(BaseActivity.this, Reading.class);
                 startActivity(intent);
                 return true;
             }
