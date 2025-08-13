@@ -2,6 +2,10 @@ package com.example.literatureuniverse.activity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.HorizontalScrollView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -37,8 +41,12 @@ public class Reading extends BaseActivity {
     private List<Story> storyList = new ArrayList<>();
     ReadingStoryAdapter readingStoryAdapter;
     RecyclerView recyclerView;
-    private int storiesToLoad = 0;
-    private int storiesLoaded = 0;
+    private int itemsPerPage = 2;
+    private int currentPage = 1;
+    private int totalPages = 1;
+
+    LinearLayout pageTabsLayout;
+    HorizontalScrollView paginationScroll;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +61,8 @@ public class Reading extends BaseActivity {
         setupHeader(); // bắt buộc gọi sau setContentView
 
         recyclerView = findViewById(R.id.recyclerReadingStory);
+        pageTabsLayout = findViewById(R.id.tabContainerStory);
+        paginationScroll = findViewById(R.id.tabScrollStory);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         readingStoryAdapter = new ReadingStoryAdapter(this, new ArrayList<>());
@@ -110,7 +120,8 @@ public class Reading extends BaseActivity {
                                         // Khi đã load hết → gán vào storyList và hiển thị
                                         storyList.clear();
                                         storyList.addAll(tempStories);
-                                        readingStoryAdapter.setData(storyList);
+                                        currentPage = 1;
+                                        updatePagination();
                                     }
                                 }
 
@@ -129,6 +140,45 @@ public class Reading extends BaseActivity {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
         });
+    }
+
+    private void updatePagination() {
+        totalPages = (int) Math.ceil((double) storyList.size() / itemsPerPage);
+        pageTabsLayout.removeAllViews();
+        paginationScroll.setVisibility(View.VISIBLE);
+        for (int i = 1; i <= totalPages; i++) {
+            final int pageNum = i;
+
+            // TẠO TEXTVIEW VỚI MARGIN, PADDING ĐẦY ĐỦ
+            TextView tab = new TextView(this);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(16, 2, 16, 2);
+            tab.setLayoutParams(params);
+
+            tab.setText(String.valueOf(i));
+            tab.setTextSize(16);
+            tab.setPadding(40, 20, 40, 20); // padding giúp tab dễ bấm và dễ nhìn
+            tab.setTextColor(i == currentPage ? getResources().getColor(R.color.white) : getResources().getColor(R.color.black));
+            tab.setBackgroundResource(i == currentPage ? R.drawable.page_selected_bg : R.drawable.page_unselected_bg);
+
+            tab.setOnClickListener(v -> {
+                currentPage = pageNum;
+                updatePagination(); // Cập nhật tab và trang hiện tại
+            });
+            pageTabsLayout.addView(tab);
+        }
+        displayCurrentPage(); // chỉ gọi ở đây
+    }
+
+    private void displayCurrentPage() {
+        int start = (currentPage - 1) * itemsPerPage;
+        int end = Math.min(start + itemsPerPage, storyList.size());
+
+        List<Story> subList = storyList.subList(start, end);
+        readingStoryAdapter.setData(subList);
     }
 
     // Class tạm lưu dữ liệu bookmark

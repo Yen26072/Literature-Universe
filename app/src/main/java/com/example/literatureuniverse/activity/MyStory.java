@@ -46,7 +46,7 @@ public class MyStory extends BaseActivity {
     private String currentUserId;
     private DatabaseReference storyRef, userRef;
 
-    private int itemsPerPage = 2;
+    private int itemsPerPage = 6;
     private int currentPage = 1;
     private int totalPages = 1;
 

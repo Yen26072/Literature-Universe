@@ -2,8 +2,10 @@ package com.example.literatureuniverse.activity;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
@@ -34,9 +36,9 @@ import java.util.List;
 public class FollowingStory extends BaseActivity {
     private String currentUserId = FirebaseAuth.getInstance().getUid();
     DatabaseReference followRef, storyRef, userRef, userRef2;
-    private List<Story> storyList = new ArrayList<>();
     FollowStoryAdapter followStoryAdapter;
     RecyclerView recyclerView;
+    List<Story> followedStories;
 
     private int itemsPerPage = 2;
     private int currentPage = 1;
@@ -78,7 +80,7 @@ public class FollowingStory extends BaseActivity {
         followRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                List<Story> followedStories = new ArrayList<>();
+                followedStories = new ArrayList<>();
 
                 for (DataSnapshot storySnap : snapshot.getChildren()) {
                     String storyId = storySnap.getKey(); // <-- Lấy key làm storyId
@@ -90,7 +92,7 @@ public class FollowingStory extends BaseActivity {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot storySnap) {
                                 Story story = storySnap.getValue(Story.class);
-                                if (story != null && !story.isDeleted()) {
+                                if (story != null) {
                                     // Tạo field tạm để sort
                                     long sortTime = Math.max(followedAt, story.getUpdatedAt());
                                     story.setSortTime(sortTime);
@@ -100,9 +102,8 @@ public class FollowingStory extends BaseActivity {
                                     if (followedStories.size() == snapshot.getChildrenCount()) {
                                         // Sắp xếp
                                         Collections.sort(followedStories, (s1, s2) -> Long.compare(s2.getSortTime(), s1.getSortTime()));
-
-                                        // Hiển thị ra RecyclerView
-                                        followStoryAdapter.setData(followedStories);
+                                        currentPage = 1;
+                                        updatePagination();
                                     }
                                 }
                             }
@@ -111,10 +112,62 @@ public class FollowingStory extends BaseActivity {
                             public void onCancelled(@NonNull DatabaseError error) {}
                         });
                     }
+
                 }
+
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
         });
+    }
+
+    private void updatePagination() {
+        totalPages = (int) Math.ceil((double) followedStories.size() / itemsPerPage);
+        Log.d("MyStoryDebug", "Tổng số trang: " + totalPages);
+        Log.d("MyStoryDebug", "Tổng số trang: " + totalPages);
+        pageTabsLayout.removeAllViews();
+
+        paginationScroll.setVisibility(View.VISIBLE);
+        Log.d("MyStoryDebug", "Đã hiển thị tabScroll");
+        for (int i = 1; i <= totalPages; i++) {
+            final int pageNum = i;
+
+            // TẠO TEXTVIEW VỚI MARGIN, PADDING ĐẦY ĐỦ
+            TextView tab = new TextView(this);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(16, 2, 16, 2);
+            tab.setLayoutParams(params);
+
+            tab.setText(String.valueOf(i));
+            tab.setTextSize(16);
+            tab.setPadding(40, 20, 40, 20); // padding giúp tab dễ bấm và dễ nhìn
+            tab.setTextColor(i == currentPage ? getResources().getColor(R.color.white) : getResources().getColor(R.color.black));
+            tab.setBackgroundResource(i == currentPage ? R.drawable.page_selected_bg : R.drawable.page_unselected_bg);
+
+            tab.setOnClickListener(v -> {
+                currentPage = pageNum;
+                updatePagination(); // Cập nhật tab và trang hiện tại
+            });
+            Log.d("MyStoryDebug", "Tạo tab trang " + i);
+            pageTabsLayout.addView(tab);
+            Log.d("MyStoryDebug", "Tổng số tab con: " + pageTabsLayout.getChildCount());
+        }
+
+//        }
+
+        displayCurrentPage(); // chỉ gọi ở đây
+    }
+
+    private void displayCurrentPage() {
+        int start = (currentPage - 1) * itemsPerPage;
+        int end = Math.min(start + itemsPerPage, followedStories.size());
+
+        Log.d("MyStoryDebug", "Hiển thị từ index " + start + " đến " + (end - 1));
+
+        List<Story> subList = followedStories.subList(start, end);
+        followStoryAdapter.setData(subList);
     }
 }

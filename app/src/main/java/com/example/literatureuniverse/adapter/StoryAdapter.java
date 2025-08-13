@@ -38,10 +38,8 @@ public class StoryAdapter extends RecyclerView.Adapter<StoryAdapter.StoryViewHol
     }
 
     public void setData(List<Story> newList) {
-        Log.d("AdapterDEBUG", "Set data called with size: " + newList.size());
         storyList.clear();
         storyList.addAll(newList);
-        Log.d("AdapterDEBUG", "Story list size after addAll: " + storyList.size());
         notifyDataSetChanged();
     }
 
