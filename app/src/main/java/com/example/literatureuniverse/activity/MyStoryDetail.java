@@ -49,12 +49,19 @@ public class MyStoryDetail extends BaseActivity {
     private DatabaseReference storyRef, chapterRef, tagRef, userRef;
     private TagCheckboxAdapterForDetail tagAdapter;
     private ChapterAdapterForDetail chapterAdapter;
-    private List<Chapter> chapterList = new ArrayList<>();
+    private List<Chapter> chapterList;
     private List<Tag> allTags = new ArrayList<>();
 
     private boolean isDeletedByAuthor = false;
     private boolean isDeletedByAdmin = false;
     private boolean isDeleted = false;
+
+    private int itemsPerPage = 15;
+    private int currentPage = 1;
+    private int totalPages = 1;
+
+    LinearLayout pageTabsLayout;
+    HorizontalScrollView paginationScroll;
 
     private Uri selectedImageUri = null;
 
@@ -80,9 +87,12 @@ public class MyStoryDetail extends BaseActivity {
         gridTags = findViewById(R.id.gridTags);
         recyclerChapterList = findViewById(R.id.recyclerChapters);
         spinnerStatus = findViewById(R.id.spnStatus);
+        pageTabsLayout = findViewById(R.id.tabContainer);
+        paginationScroll = findViewById(R.id.tabScroll);
 
+        chapterList = new ArrayList<>();
         recyclerChapterList.setLayoutManager(new LinearLayoutManager(this));
-        chapterAdapter = new ChapterAdapterForDetail(this, chapterList, true);
+        chapterAdapter = new ChapterAdapterForDetail(this, new ArrayList<>(), true);
         recyclerChapterList.setAdapter(chapterAdapter);
 
         // Thiết lập Adapter cho Spinner
@@ -324,12 +334,63 @@ public class MyStoryDetail extends BaseActivity {
                     Chapter chapter = snap.getValue(Chapter.class);
                     if (chapter != null) chapterList.add(chapter);
                 }
-                chapterAdapter.setData(chapterList);
+                currentPage = 1;
+                updatePagination(); // GỌI 1 CHỖ DUY NHẤT
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
         });
+    }
+
+    private void updatePagination() {
+        totalPages = (int) Math.ceil((double) chapterList.size() / itemsPerPage);
+        Log.d("MyStoryDebug", "Tổng số trang: " + totalPages);
+        Log.d("MyStoryDebug", "Tổng số trang: " + totalPages);
+        pageTabsLayout.removeAllViews();
+
+        paginationScroll.setVisibility(View.VISIBLE);
+        Log.d("MyStoryDebug", "Đã hiển thị tabScroll");
+        for (int i = 1; i <= totalPages; i++) {
+            final int pageNum = i;
+
+            // TẠO TEXTVIEW VỚI MARGIN, PADDING ĐẦY ĐỦ
+            TextView tab = new TextView(this);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(16, 2, 16, 2);
+            tab.setLayoutParams(params);
+
+            tab.setText(String.valueOf(i));
+            tab.setTextSize(16);
+            tab.setPadding(40, 20, 40, 20); // padding giúp tab dễ bấm và dễ nhìn
+            tab.setTextColor(i == currentPage ? getResources().getColor(R.color.white) : getResources().getColor(R.color.black));
+            tab.setBackgroundResource(i == currentPage ? R.drawable.page_selected_bg : R.drawable.page_unselected_bg);
+
+            tab.setOnClickListener(v -> {
+                currentPage = pageNum;
+                updatePagination(); // Cập nhật tab và trang hiện tại
+            });
+            Log.d("MyStoryDebug", "Tạo tab trang " + i);
+            pageTabsLayout.addView(tab);
+            Log.d("MyStoryDebug", "Tổng số tab con: " + pageTabsLayout.getChildCount());
+        }
+
+//        }
+
+        displayCurrentPage(); // chỉ gọi ở đây
+    }
+
+    private void displayCurrentPage() {
+        int start = (currentPage - 1) * itemsPerPage;
+        int end = Math.min(start + itemsPerPage, chapterList.size());
+
+        Log.d("MyStoryDebug", "Hiển thị từ index " + start + " đến " + (end - 1));
+
+        List<Chapter> subList = chapterList.subList(start, end);
+        chapterAdapter.setData(subList);
     }
 
     private void saveStory() {

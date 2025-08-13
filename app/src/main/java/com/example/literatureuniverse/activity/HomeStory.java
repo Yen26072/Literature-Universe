@@ -60,7 +60,6 @@ import java.util.Map;
 
 public class HomeStory extends BaseActivity {
     private String authorName, authorId;
-    private Story currentStory;
     private String storyId;
     private DatabaseReference storyRef, chapterRef, tagRef, userRef, commentRef, replyRef, userRef2;
     private TextView txtStoryName, txtAuthorName, txtEyes, txtLike, txtComments, txtStatus, txtNewChapter, txtLatestUpdate, txtDes, txtGoiY;
@@ -513,7 +512,6 @@ public class HomeStory extends BaseActivity {
 
                 Story story = snapshot.getValue(Story.class);
                 if (story == null) return;
-                currentStory = story;
                 authorId = story.getAuthorId();
                 userRef2.orderByChild("userId").equalTo(authorId)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
