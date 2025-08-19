@@ -22,6 +22,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -60,7 +61,7 @@ import java.util.Map;
 
 public class HomeStory extends BaseActivity {
     private String authorName, authorId;
-    private String storyId;
+    private String storyId, commentnotificationId;
     private DatabaseReference storyRef, chapterRef, tagRef, userRef, commentRef, replyRef, userRef2;
     private TextView txtStoryName, txtAuthorName, txtEyes, txtLike, txtComments, txtStatus, txtNewChapter, txtLatestUpdate, txtDes, txtGoiY;
     private ImageView imgCover, imgAvatarComment;
@@ -91,6 +92,7 @@ public class HomeStory extends BaseActivity {
     private int commentsPerPage = 3; // hoặc số dòng bạn muốn hiển thị
     private LinearLayout tabContainerComment;
     private HorizontalScrollView paginationScrollComment;
+    private NestedScrollView nestedScroll;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,6 +129,7 @@ public class HomeStory extends BaseActivity {
         recyclerComment = findViewById(R.id.recyclerComment);
         tabContainerComment = findViewById(R.id.tabContainerComment);
         paginationScrollComment = findViewById(R.id.tabScrollComment);
+        nestedScroll = findViewById(R.id.main);
 
         recyclerViewChapter.setLayoutManager(new LinearLayoutManager(this));
         chapterList = new ArrayList<>();
@@ -143,6 +146,7 @@ public class HomeStory extends BaseActivity {
         recyclerComment.setAdapter(commentAdapter);
 
         storyId = getIntent().getStringExtra("storyId");
+        commentnotificationId = getIntent().getStringExtra("commentnotificationId");
         if (storyId == null) {
             Toast.makeText(this, "Không tìm thấy truyện", Toast.LENGTH_SHORT).show();
             finish();
@@ -292,6 +296,9 @@ public class HomeStory extends BaseActivity {
                                 // Cập nhật adapter
                                 displayCurrentCommentPage();
                                 updateCommentTabStyles();
+                                if(commentnotificationId!=null){
+                                    scrollToComment();
+                                }
                             }
 
                             @Override
@@ -371,6 +378,60 @@ public class HomeStory extends BaseActivity {
         List<Comment> subList = allComments.subList(start, end);
         commentAdapter.setData(subList, replyMap);
         recyclerComment.scrollToPosition(0);
+    }
+
+    private void scrollToComment() {
+        int globalIndex = -1;
+        for (int i = 0; i < allComments.size(); i++) {
+            if (allComments.get(i).getCommentId().equals(commentnotificationId)) {
+                globalIndex = i;
+                break;
+            }
+        }
+
+        if (globalIndex != -1) {
+            // Tính trang chứa comment đó
+            int targetPage = (globalIndex / commentsPerPage) + 1;
+            currentCommentPage = targetPage;
+            // Chuyển tab & render lại page
+            updateCommentTabStyles();
+            displayCurrentCommentPage();
+
+            // Sau khi load lại subList thì tìm index trong subList
+            int start = (currentCommentPage - 1) * commentsPerPage;
+            int localIndex = globalIndex - start;
+
+            // Đợi layout xong rồi mới cuộn cha (NestedScrollView/ScrollView)
+            recyclerComment.postDelayed(() -> {
+                // thử lấy ViewHolder của item trong page
+                RecyclerView.ViewHolder vh = recyclerComment.findViewHolderForAdapterPosition(localIndex);
+                if (vh == null) {
+                    // ép RV bind item trước
+                    recyclerComment.scrollToPosition(localIndex);
+                    recyclerComment.postDelayed(() -> {
+                        RecyclerView.ViewHolder vh2 = recyclerComment.findViewHolderForAdapterPosition(localIndex);
+                        if (vh2 != null) {
+                            smoothScrollParentToChild(vh2.itemView);
+                        }
+                        // highlight
+                        commentAdapter.highlightComment(commentnotificationId);
+                        commentnotificationId = null;
+                    }, 50);
+                } else {
+                    smoothScrollParentToChild(vh.itemView);
+                    commentAdapter.highlightComment(commentnotificationId);
+                    commentnotificationId = null;
+                }
+            }, 50);
+        }
+    }
+
+    private void smoothScrollParentToChild(View child) {
+        // vị trí tuyệt đối theo cha cuộn
+        int y = (int) (recyclerComment.getTop() + child.getTop());
+        if (nestedScroll != null) {
+            nestedScroll.smoothScrollTo(0, y);
+        }
     }
 
     private void loadChapters() {

@@ -1,8 +1,10 @@
 package com.example.literatureuniverse.adapter;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Color;
 import android.icu.text.SimpleDateFormat;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +21,7 @@ import com.bumptech.glide.Glide;
 import com.example.literatureuniverse.R;
 import com.example.literatureuniverse.model.Comment;
 import com.example.literatureuniverse.model.CommentReply;
+import com.example.literatureuniverse.model.CommentNotification;
 import com.example.literatureuniverse.model.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -33,9 +36,11 @@ import com.google.firebase.database.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentViewHolder>{
     private Context context;
@@ -44,6 +49,12 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
     private HashMap<String, User> userCache;
     private HashMap<String, String> chapterTitleCache;
     private DatabaseReference userRef;
+    private String highlightedCommentId;
+
+    public void highlightComment(String commentId) {
+        highlightedCommentId = commentId;
+        notifyDataSetChanged();
+    }
 
     public CommentAdapter(Context context, List<Comment> commentList, Map<String, List<CommentReply>> replyMap, HashMap<String, User> userCache, DatabaseReference userRef) {
         this.context = context;
@@ -179,6 +190,21 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                 holder.replyInputLayout.setVisibility(View.GONE); // ẩn khung reply
             }
         });
+
+        // Nếu là comment cần highlight
+        if (highlightedCommentId != null && highlightedCommentId.equals(comment.getCommentId())) {
+            holder.itemView.setBackgroundColor(Color.YELLOW);
+
+            int adapterPos = holder.getAdapterPosition(); // cache tại thời điểm bind
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                highlightedCommentId = null;
+                if (adapterPos != RecyclerView.NO_POSITION) {
+                    notifyItemChanged(adapterPos);
+                }
+            }, 2000);
+        } else {
+            holder.itemView.setBackgroundColor(Color.TRANSPARENT);
+        }
     }
 
     private void sendReply(String parentCommentId, String content, String storyId) {
@@ -197,10 +223,10 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                 false, null
         );
 
-        // Lưu reply và hiển thị
+        // Lưu reply
         replyRef.setValue(reply).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                // ✅ Thêm vào danh sách replies trong bộ nhớ
+                // Cập nhật danh sách reply trong bộ nhớ
                 List<CommentReply> replies2 = replyMap.get(parentCommentId);
                 if (replies2 == null) {
                     replies2 = new ArrayList<>();
@@ -208,7 +234,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                 }
                 replies2.add(reply);
 
-                // ✅ Cập nhật giao diện (refresh lại comment đang reply)
+                // Refresh lại comment gốc
                 int position = findCommentPositionById(parentCommentId);
                 if (position != -1) {
                     notifyItemChanged(position);
@@ -216,6 +242,64 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             }
         });
 
+        DatabaseReference commentRef = FirebaseDatabase.getInstance()
+                .getReference("comments")
+                .child(parentCommentId);
+        DatabaseReference repliesRef = FirebaseDatabase.getInstance()
+                .getReference("commentReplies")
+                .child(parentCommentId);
+        DatabaseReference notiRef = FirebaseDatabase.getInstance().getReference("commentnotifications");
+
+        // Lấy thông tin comment gốc + replies để xác định người cần thông báo
+        commentRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot cmtSnap) {
+                Set<String> notifyUsers = new HashSet<>();
+
+                Comment cmt = cmtSnap.getValue(Comment.class);
+                if (cmt != null) notifyUsers.add(cmt.getUserId());
+
+                // Sau đó load replies
+                repliesRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        for (DataSnapshot rSnap : snapshot.getChildren()) {
+                            CommentReply r = rSnap.getValue(CommentReply.class);
+                            if (r != null) notifyUsers.add(r.getUserId());
+                        }
+
+                        // Loại bỏ người vừa reply
+                        notifyUsers.remove(userId);
+
+                        // Gửi thông báo
+                        for (String uidTarget : notifyUsers) {
+                            String notiId = notiRef.child(uidTarget).push().getKey();
+
+                            CommentNotification notification = new CommentNotification(
+                                    notiId,
+                                    storyId,
+                                    parentCommentId,
+                                    replyId,
+                                    userId,
+                                    "đã trả lời bình luận mà bạn theo dõi",
+                                    createdAt,
+                                    false
+                            );
+
+                            notiRef.child(uidTarget).child(notiId).setValue(notification);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
+
+        // Tăng tổng số comments trong story
         DatabaseReference storyRef = FirebaseDatabase.getInstance()
                 .getReference("stories")
                 .child(storyId);
@@ -252,9 +336,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             }
 
             @Override
-            public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot snapshot) {
-                // Xử lý nếu cần
-            }
+            public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot snapshot) {}
         });
     }
 

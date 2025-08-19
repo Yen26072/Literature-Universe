@@ -15,6 +15,7 @@ import com.bumptech.glide.Glide;
 import com.example.literatureuniverse.R;
 import com.example.literatureuniverse.activity.FollowingStory;
 import com.example.literatureuniverse.activity.HomeAdminSuper;
+import com.example.literatureuniverse.activity.Library;
 import com.example.literatureuniverse.activity.Login;
 import com.example.literatureuniverse.activity.MailBox;
 import com.example.literatureuniverse.activity.MainActivity;
@@ -218,6 +219,11 @@ public class BaseActivity extends AppCompatActivity {
             }
             if(id==R.id.menu_reading){
                 Intent intent = new Intent(BaseActivity.this, Reading.class);
+                startActivity(intent);
+                return true;
+            }
+            if(id==R.id.menu_library){
+                Intent intent = new Intent(BaseActivity.this, Library.class);
                 startActivity(intent);
                 return true;
             }

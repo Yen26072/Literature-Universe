@@ -1,5 +1,6 @@
 package com.example.literatureuniverse.activity;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -17,10 +18,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.literatureuniverse.R;
-import com.example.literatureuniverse.adapter.CommentAdapter;
 import com.example.literatureuniverse.adapter.FollowStoryAdapter;
+import com.example.literatureuniverse.adapter.StoryAdapter;
 import com.example.literatureuniverse.base.BaseActivity;
-import com.example.literatureuniverse.model.FollowStory;
 import com.example.literatureuniverse.model.Story;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -33,100 +33,92 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class FollowingStory extends BaseActivity {
+public class Library extends BaseActivity {
     private String currentUserId = FirebaseAuth.getInstance().getUid();
-    DatabaseReference followRef, storyRef;
-    FollowStoryAdapter followStoryAdapter;
+    DatabaseReference libraryRef, storyRef;
+    StoryAdapter libraryStoryAdapter;
     RecyclerView recyclerView;
-    List<Story> followedStories;
-
+    List<Story> libraryStories = new ArrayList<>();
     private int itemsPerPage = 2;
     private int currentPage = 1;
     private int totalPages = 1;
-
     LinearLayout pageTabsLayout;
     HorizontalScrollView paginationScroll;
 
+    @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_following_story);
+        setContentView(R.layout.activity_library);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
         setupHeader(); // bắt buộc gọi sau setContentView
-        Log.d("FOLLOWINGSTORY", "userId = " + currentUserId);
 
-        recyclerView = findViewById(R.id.recyclerFollowStory);
+        recyclerView = findViewById(R.id.recyclerLibraryStory);
         pageTabsLayout = findViewById(R.id.tabContainerStory);
         paginationScroll = findViewById(R.id.tabScrollStory);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        followStoryAdapter = new FollowStoryAdapter(this, new ArrayList<>());
-        recyclerView.setAdapter(followStoryAdapter);
+        libraryStoryAdapter = new StoryAdapter(this, new ArrayList<>());
+        recyclerView.setAdapter(libraryStoryAdapter);
 
         storyRef = FirebaseDatabase.getInstance().getReference("stories");
-        followRef = FirebaseDatabase.getInstance().getReference("follows").child(currentUserId);
+        libraryRef = FirebaseDatabase.getInstance().getReference("libraries").child(currentUserId);
 
-        showListFollowStory();
+        showListLibraryStory();
     }
 
-    private void showListFollowStory() {
-        followRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                followedStories = new ArrayList<>();
-
-                for (DataSnapshot storySnap : snapshot.getChildren()) {
-                    String storyId = storySnap.getKey(); // <-- Lấy key làm storyId
-                    Long followedAt = storySnap.child("followedAt").getValue(Long.class);
-                    Log.d("FOLLOWINGSTORY", "storyId = " + storyId);
-
-
-                        storyRef.child(storyId).addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot storySnap) {
-                                Story story = storySnap.getValue(Story.class);
-                                if (story != null) {
-                                    // Tạo field tạm để sort
-                                    long sortTime = Math.max(followedAt, story.getUpdatedAt());
-                                    story.setSortTime(sortTime);
-                                    followedStories.add(story);
-
-                                    // Khi đã load đủ số truyện
-                                    if (followedStories.size() == snapshot.getChildrenCount()) {
-                                        // Sắp xếp
-                                        Collections.sort(followedStories, (s1, s2) -> Long.compare(s2.getSortTime(), s1.getSortTime()));
-                                        currentPage = 1;
-                                        updatePagination();
+    private void showListLibraryStory() {
+        libraryRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        libraryStories.clear();
+                        for (DataSnapshot storySnap : snapshot.getChildren()){
+                            String storyId = storySnap.getKey();
+                            Long addAt = storySnap.child("addedAt").getValue(Long.class);
+                            Log.d("LIBRARY", "storyId = " + storyId + "   addAt = " + addAt);
+                            storyRef.child(storyId).addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot storysnapshot) {
+                                    Story story = storysnapshot.getValue(Story.class);
+                                    if (story!=null){
+                                        long sortTime = addAt;
+                                        story.setSortTime(sortTime);
+                                        Log.d("LIBRARY", "sortTime = " + story.getSortTime());
+                                        libraryStories.add(story);
+                                        // Khi đã load đủ số truyện
+                                        if (libraryStories.size() == snapshot.getChildrenCount()){
+                                            Collections.sort(libraryStories, (s1, s2) -> Long.compare(s2.getSortTime(), s1.getSortTime()));
+                                            currentPage = 1;
+                                            updatePagination();
+                                        }
                                     }
                                 }
-                            }
 
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError error) {}
-                        });
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError error) {
+
+                                }
+                            });
+                        }
                     }
 
-                }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
 
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
+                    }
+                });
     }
 
     private void updatePagination() {
-        totalPages = (int) Math.ceil((double) followedStories.size() / itemsPerPage);
-        Log.d("MyStoryDebug", "Tổng số trang: " + totalPages);
-        Log.d("MyStoryDebug", "Tổng số trang: " + totalPages);
+        totalPages = (int) Math.ceil((double) libraryStories.size() / itemsPerPage);
         pageTabsLayout.removeAllViews();
 
         paginationScroll.setVisibility(View.VISIBLE);
-        Log.d("MyStoryDebug", "Đã hiển thị tabScroll");
         for (int i = 1; i <= totalPages; i++) {
             final int pageNum = i;
 
@@ -149,9 +141,7 @@ public class FollowingStory extends BaseActivity {
                 currentPage = pageNum;
                 updatePagination(); // Cập nhật tab và trang hiện tại
             });
-            Log.d("MyStoryDebug", "Tạo tab trang " + i);
             pageTabsLayout.addView(tab);
-            Log.d("MyStoryDebug", "Tổng số tab con: " + pageTabsLayout.getChildCount());
         }
 
 //        }
@@ -161,11 +151,8 @@ public class FollowingStory extends BaseActivity {
 
     private void displayCurrentPage() {
         int start = (currentPage - 1) * itemsPerPage;
-        int end = Math.min(start + itemsPerPage, followedStories.size());
-
-        Log.d("MyStoryDebug", "Hiển thị từ index " + start + " đến " + (end - 1));
-
-        List<Story> subList = followedStories.subList(start, end);
-        followStoryAdapter.setData(subList);
+        int end = Math.min(start + itemsPerPage, libraryStories.size());
+        List<Story> subList = libraryStories.subList(start, end);
+        libraryStoryAdapter.setData(subList);
     }
 }
