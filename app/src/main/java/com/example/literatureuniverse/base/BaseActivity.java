@@ -19,6 +19,7 @@ import com.example.literatureuniverse.activity.Library;
 import com.example.literatureuniverse.activity.Login;
 import com.example.literatureuniverse.activity.MailBox;
 import com.example.literatureuniverse.activity.MainActivity;
+import com.example.literatureuniverse.activity.MyProfile;
 import com.example.literatureuniverse.activity.MyStory;
 import com.example.literatureuniverse.activity.Reading;
 import com.google.firebase.auth.FirebaseAuth;
@@ -224,6 +225,11 @@ public class BaseActivity extends AppCompatActivity {
             }
             if(id==R.id.menu_library){
                 Intent intent = new Intent(BaseActivity.this, Library.class);
+                startActivity(intent);
+                return true;
+            }
+            if(id==R.id.menu_profile){
+                Intent intent = new Intent(BaseActivity.this, MyProfile.class);
                 startActivity(intent);
                 return true;
             }

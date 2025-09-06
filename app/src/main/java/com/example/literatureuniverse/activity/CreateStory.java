@@ -182,7 +182,7 @@ public class CreateStory extends BaseActivity {
 
         UnsplashService service = retrofit.create(UnsplashService.class);
 
-        service.searchPhotos(keyword, 6, ACCESS_KEY).enqueue(new Callback<UnsplashResponse>() {
+        service.searchPhotos(keyword, 24, ACCESS_KEY).enqueue(new Callback<UnsplashResponse>() {
             @Override
             public void onResponse(Call<UnsplashResponse> call, Response<UnsplashResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {

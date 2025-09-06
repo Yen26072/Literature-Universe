@@ -1,5 +1,6 @@
 package com.example.literatureuniverse.activity;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -68,7 +69,7 @@ import java.util.Map;
 
 public class ChapterDetail extends BaseActivity {
     ImageView imgStar, imgPin, imgAdd, imgFont;
-    TextView txtPreviousChapter, txtNextChapter, txtTitle, txtContent, txtStoryName, txtAuthorName, txtPreviousChapter2, txtNextChapter2, txtStoryHome;
+    TextView txtPreviousChapter, txtNextChapter, txtTitle, txtContent, txtStoryName, txtAuthorName, txtPreviousChapter2, txtNextChapter2, txtStoryHome, txtStoryHome2;
     private DatabaseReference storyRef, likesRef, userRef2, userRef, chapterRef, bookmarkRef, followRef, libraryRef, commentRef, commentRef2, replyRef;
     private String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
     private String storyId, currentChapterId;
@@ -120,6 +121,7 @@ public class ChapterDetail extends BaseActivity {
         txtPreviousChapter2 = findViewById(R.id.txtPreviousChapter2);
         txtNextChapter2 = findViewById(R.id.txtNextChapter2);
         txtStoryHome = findViewById(R.id.txtHomeStory);
+        txtStoryHome2 = findViewById(R.id.txtHomeStory2);
         scrollView = findViewById(R.id.main);
         imgAvatarComment = findViewById(R.id.imgAvatarComment);
         edtComment = findViewById(R.id.edtComment);
@@ -128,8 +130,13 @@ public class ChapterDetail extends BaseActivity {
         tabContainerComment = findViewById(R.id.tabContainerComment);
         paginationScrollComment = findViewById(R.id.tabScrollComment);
 
-        scrollView.requestFocus();
-        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+        edtComment.clearFocus();
+        scrollView.post(() -> scrollView.requestFocus());
+//        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN| WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
+//        View dummyView = findViewById(R.id.main).getRootView().findViewById(android.R.id.content);
+//        if (dummyView != null) {
+//            dummyView.requestFocus();
+//        }
 
         storyId = getIntent().getStringExtra("storyId");
         currentChapterId = getIntent().getStringExtra("chapterId");
@@ -235,6 +242,15 @@ public class ChapterDetail extends BaseActivity {
         // Áp dụng cấu hình đã lưu
         applySavedSettings();
         imgFont.setOnClickListener(v -> showFontSettingsPopup(v));
+
+        txtStoryHome.setOnClickListener(v -> openHomeStory());
+        txtStoryHome2.setOnClickListener(v -> openHomeStory());
+    }
+
+    private void openHomeStory() {
+        Intent intent = new Intent(ChapterDetail.this, HomeStory.class);
+        intent.putExtra("storyId", storyId);
+        startActivity(intent);
     }
 
     private void loadComments() {

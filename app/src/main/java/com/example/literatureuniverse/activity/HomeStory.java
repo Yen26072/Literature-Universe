@@ -64,7 +64,7 @@ public class HomeStory extends BaseActivity {
     private String storyId, commentnotificationId;
     private DatabaseReference storyRef, chapterRef, tagRef, userRef, commentRef, replyRef, userRef2;
     private TextView txtStoryName, txtAuthorName, txtEyes, txtLike, txtComments, txtStatus, txtNewChapter, txtLatestUpdate, txtDes, txtGoiY;
-    private ImageView imgCover, imgAvatarComment;
+    private ImageView imgCover, imgCover2, imgAvatarComment;
     private RecyclerView recyclerViewChapter, recyclerViewGoiY, recyclerComment;
     LinearLayout tabContainerTop, tabContainerBottom;
     HorizontalScrollView paginationScrollChapterTop, paginationScrollChapterBottom;
@@ -112,6 +112,7 @@ public class HomeStory extends BaseActivity {
         txtLike = findViewById(R.id.txtLike);
         txtComments = findViewById(R.id.txtComments);
         imgCover = findViewById(R.id.imgCover2);
+        imgCover2 = findViewById(R.id.imageView5);
         imgAvatarComment = findViewById(R.id.imgAvatarComment);
         txtStatus = findViewById(R.id.txtStatus);
         txtNewChapter = findViewById(R.id.txtNewChapter);
@@ -602,6 +603,7 @@ public class HomeStory extends BaseActivity {
                 txtLatestUpdate.setText("Cập nhật: " + date);
                 txtNewChapter.setText("Chương mới: " + story.getLatestChapter().getTitle());
                 Glide.with(HomeStory.this).load(story.getCoverUrl()).into(imgCover);
+                Glide.with(HomeStory.this).load(story.getCoverUrl()).into(imgCover2);
 
                 userRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override

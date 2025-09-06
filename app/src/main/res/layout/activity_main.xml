@@ -1,12 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".activity.MainActivity" >
+    android:fillViewport="true"
+    tools:context=".activity.MainActivity">
 
-    <include layout="@layout/header"/>
-</LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <include layout="@layout/header" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="80dp"
+            android:layout_marginEnd="30dp">
+
+            <EditText
+                android:id="@+id/edtSearch"
+                android:layout_width="250dp"
+                android:layout_height="40dp"
+                android:inputType="textPersonName"
+                android:hint="Tên truyện hoặc tên tác giả"/>
+
+            <ImageButton
+                android:id="@+id/btnSearch"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_search"
+                android:backgroundTint="@color/white"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <!-- Tiêu đề: Truyện mới -->
+            <TextView
+                android:id="@+id/tvNewStories"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Truyện mới"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_weight="1"
+                android:textColor="@color/black"
+                android:padding="4dp" />
+
+            <TextView
+                android:id="@+id/tvSeeMore1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Xem thêm"
+                android:textSize="15sp"
+                android:paddingEnd="4dp"
+                android:textColor="@color/blue"/>
+
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvNewStories"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <!-- Tiêu đề: Truyện mới hoàn thành -->
+            <TextView
+                android:id="@+id/tvCompletedStories"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Truyện mới hoàn thành"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                android:layout_weight="1"
+                android:textColor="@color/black"
+                android:padding="4dp" />
+
+            <TextView
+                android:id="@+id/tvSeeMore2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Xem thêm"
+                android:textSize="15sp"
+                android:paddingEnd="4dp"
+                android:textColor="@color/blue"/>
+
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvCompletedStories"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false" />
+
+    </LinearLayout>
+
+</androidx.core.widget.NestedScrollView>

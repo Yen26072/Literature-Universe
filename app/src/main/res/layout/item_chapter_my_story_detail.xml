@@ -15,6 +15,7 @@
         android:text="Chương 1: Mở đầu"
         android:ellipsize="end"
         android:maxLines="1"
+        android:textColor="@color/black"
         android:textSize="16sp" />
 
     <ImageView

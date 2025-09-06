@@ -5,8 +5,10 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:focusableInTouchMode="true"
+    android:fillViewport="true"
     android:descendantFocusability="beforeDescendants"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
     tools:context=".activity.ChapterDetail">
 
     <LinearLayout
@@ -136,6 +138,7 @@
             android:layout_marginTop="15dp"
             android:paddingHorizontal="5dp"
             android:text="Dòng 1\nDongf 2\nDong3"
+            android:textIsSelectable="true"
             android:textSize="17sp"/>
 
         <LinearLayout
@@ -209,6 +212,9 @@
                     android:minLines="3"
                     android:gravity="top|start"
                     android:scrollbars="vertical"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:cursorVisible="true"
                     android:maxLines="10"
                     android:overScrollMode="always"
                     android:textColor="@color/black"/>
