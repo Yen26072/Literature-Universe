@@ -1,5 +1,8 @@
 package com.example.literatureuniverse.activity;
 
+import static org.apache.commons.compress.archivers.zip.ZipShort.getBytes;
+
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -32,6 +35,8 @@ import com.example.literatureuniverse.adapter.TagCheckboxAdapter;
 import com.example.literatureuniverse.base.BaseActivity;
 import com.example.literatureuniverse.model.Story;
 import com.example.literatureuniverse.model.Tag;
+import com.example.literatureuniverse.model.cloudinary.CloudinaryService;
+import com.example.literatureuniverse.model.cloudinary.UploadResponse;
 import com.example.literatureuniverse.model.unsplash.UnsplashPhoto;
 import com.example.literatureuniverse.model.unsplash.UnsplashResponse;
 import com.example.literatureuniverse.network.UnsplashService;
@@ -41,30 +46,45 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.StorageReference;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class CreateStory extends BaseActivity {
     private TagCheckboxAdapter adapter;
     private List<Tag> tagList = new ArrayList<>();
     private DatabaseReference tagsRef;
     String selectedImageUrl = "";
-    private Button btn1, btnSubmit;
+    private Button btn1, btn2, btnSubmit;
     EditText edtTitle, edtTextMultiline;
     private ImageView imgCoverStory;
     ExpandableHeightGridView gridView;
     private final String ACCESS_KEY = "CexBhEFhEwwBJIN7qLyq6kTg-LevOCi6aBX0VH66Ifk";
+    private static final int PICK_IMAGE_REQUEST = 1;
+    private Uri selectedImageUri;
+    private String uploadedImageUrl = null;
+    private final String CLOUD_NAME = "dzuljozzy"; // thay bằng cloud_name của bạn
+    private final String UPLOAD_PRESET = "unsigned_preset"; // thay bằng upload_preset bạn đã tạo
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,6 +101,7 @@ public class CreateStory extends BaseActivity {
         gridView = findViewById(R.id.gridView);
         gridView.setExpanded(true);
         btn1 = findViewById(R.id.button1);
+        btn2 = findViewById(R.id.button2);
         btnSubmit = findViewById(R.id.btnSubmit);
         edtTitle = findViewById(R.id.edtTitle);
         edtTextMultiline = findViewById(R.id.edtTextMultiline);
@@ -136,42 +157,165 @@ public class CreateStory extends BaseActivity {
             }
         });
 
-        btnSubmit.setOnClickListener(new View.OnClickListener() {
+        btn2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                List<Tag> selectedTagObjects = adapter.getCheckedTags();
-                List<String> selectedTags = new ArrayList<>();
-                for (Tag tag : selectedTagObjects) {
-                    selectedTags.add(tag.getId()); // Hoặc tag.getLabel() tùy bạn lưu cái gì trong DB
-                }
-                String title = edtTitle.getText().toString().trim();
-                String description = edtTextMultiline.getText().toString().trim();
-                String storyId = "story_" + System.currentTimeMillis(); // hoặc UUID nếu muốn
-
-                Story story = new Story();
-                story.setStoryId(storyId);
-                story.setTitle(title);
-                story.setDescription(description);
-                story.setAuthorId(currentUserId);
-                story.setCoverUrl(selectedImageUrl);
-                story.setTags(new ArrayList<>(selectedTags));
-                story.setStatus("Còn tiếp");
-                story.setCreatedAt(System.currentTimeMillis());
-                story.setUpdatedAt(System.currentTimeMillis());
-                story.setLikesCount(0);
-                story.setViewsCount(0);
-                story.setCommentsCount(0);
-                story.setFollowersCount(0);
-                story.setDeleted(false);
-
-                Log.d("DEBUG", "storyId="+storyId+" title="+title+" description=" +description+" currentUserId="+currentUserId+" selectedImageUrl="+selectedImageUrl+" selectedTags="+selectedTags);
-
-                Intent intent = new Intent(CreateStory.this, AddChapter.class);
-                intent.putExtra("story", story); // Truyền object
-                intent.putExtra("isNewStory", true); // là truyện mới
-                startActivity(intent);
+                Intent intent = new Intent();
+                intent.setType("image/*");
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(intent, PICK_IMAGE_REQUEST);
             }
         });
+
+        btnSubmit.setOnClickListener(v -> {
+            String title = edtTitle.getText().toString().trim();
+            String description = edtTextMultiline.getText().toString().trim();
+
+            if (title.isEmpty()) {
+                Toast.makeText(CreateStory.this, "Nhập tiêu đề truyện", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            List<Tag> selectedTagObjects = adapter.getCheckedTags();
+            if (selectedTagObjects.isEmpty()) {
+                Toast.makeText(CreateStory.this, "Chọn ít nhất 1 thể loại", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            List<String> selectedTags = new ArrayList<>();
+            for (Tag tag : selectedTagObjects) {
+                selectedTags.add(tag.getId());
+            }
+
+            String storyId = "story_" + System.currentTimeMillis();
+
+            // TH1: Chọn ảnh từ điện thoại
+            if (uploadedImageUrl  != null) {
+                saveStoryAndGoNext(storyId, title, description, currentUserId, uploadedImageUrl, selectedTags);
+            }
+            // TH2: Chọn ảnh từ Unsplash
+            else if (selectedImageUrl != null && !selectedImageUrl.isEmpty()) {
+                saveStoryAndGoNext(storyId, title, description, currentUserId, selectedImageUrl, selectedTags);
+            }
+            // TH3: Không chọn ảnh
+            else {
+                Toast.makeText(CreateStory.this, "Vui lòng chọn ảnh bìa!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+    }
+
+    private void saveStoryAndGoNext(String storyId, String title, String description,
+                                    String currentUserId, String coverUrl, List<String> selectedTags) {
+        Story story = new Story();
+        story.setStoryId(storyId);
+        story.setTitle(title);
+        story.setDescription(description);
+        story.setAuthorId(currentUserId);
+        story.setCoverUrl(coverUrl);
+        story.setTags(new ArrayList<>(selectedTags));
+        story.setStatus("Còn tiếp");
+        story.setCreatedAt(System.currentTimeMillis());
+        story.setUpdatedAt(System.currentTimeMillis());
+        story.setLikesCount(0);
+        story.setViewsCount(0);
+        story.setCommentsCount(0);
+        story.setFollowersCount(0);
+        story.setDeleted(false);
+
+        Log.d("DEBUG", "storyId=" + storyId + " title=" + title + " coverUrl=" + coverUrl);
+
+        Intent intent = new Intent(CreateStory.this, AddChapter.class);
+        intent.putExtra("story", story);
+        intent.putExtra("isNewStory", true);
+        startActivity(intent);
+    }
+
+
+    //Nhận ảnh người dùng chọn từ điện thoại
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK
+                && data != null && data.getData() != null) {
+            selectedImageUri = data.getData();
+
+            try {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), selectedImageUri);
+                imgCoverStory.setImageBitmap(bitmap);
+
+                // Upload ngay khi chọn ảnh
+                uploadImageToCloudinary(selectedImageUri);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void uploadImageToCloudinary(Uri imageUri) {
+        try {
+            InputStream inputStream = getContentResolver().openInputStream(imageUri);
+            byte[] imageBytes = getBytes(inputStream);
+
+            // Tạo Retrofit client
+            Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl("https://api.cloudinary.com/v1_1/" + CLOUD_NAME + "/")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+
+            CloudinaryService service = retrofit.create(CloudinaryService.class);
+
+            // Chuẩn bị multipart
+            RequestBody requestFile = RequestBody.create(MediaType.parse("image/*"), imageBytes);
+            MultipartBody.Part body = MultipartBody.Part.createFormData("file", "image.jpg", requestFile);
+            RequestBody preset = RequestBody.create(MediaType.parse("text/plain"), UPLOAD_PRESET);
+
+            // Gọi API
+            service.uploadImage(body, preset).enqueue(new retrofit2.Callback<UploadResponse>() {
+                @Override
+                public void onResponse(Call<UploadResponse> call, retrofit2.Response<UploadResponse> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        uploadedImageUrl = response.body().getSecureUrl();
+                        Log.d("Cloudinary", "Image URL: " + uploadedImageUrl);
+
+                        runOnUiThread(() ->{
+                                Toast.makeText(CreateStory.this, "Upload ảnh thành công", Toast.LENGTH_SHORT).show();
+                                Glide.with(CreateStory.this).load(uploadedImageUrl).into(imgCoverStory);
+                                imgCoverStory.setVisibility(View.VISIBLE);
+                                }
+                        );
+                    } else {
+                        runOnUiThread(() ->
+                                Toast.makeText(CreateStory.this, "Upload ảnh thất bại", Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<UploadResponse> call, Throwable t) {
+                    runOnUiThread(() ->
+                            Toast.makeText(CreateStory.this, "Lỗi upload: " + t.getMessage(), Toast.LENGTH_SHORT).show()
+                    );
+                }
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private byte[] getBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+        int bufferSize = 1024;
+        byte[] buffer = new byte[bufferSize];
+
+        int len;
+        while ((len = inputStream.read(buffer)) != -1) {
+            byteBuffer.write(buffer, 0, len);
+        }
+        return byteBuffer.toByteArray();
     }
 
     private void fetchUnsplashImages(String keyword) {

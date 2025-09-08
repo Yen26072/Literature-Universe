@@ -82,14 +82,47 @@
         android:verticalSpacing="8dp"
         android:horizontalSpacing="8dp" />
 
-    <Button
-        android:id="@+id/button1"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAllCaps="false"
-        android:layout_marginStart="10dp"
-        android:textColor="@color/black"
-        android:text="Chọn ảnh bìa có sẵn" />
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/button1"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textAllCaps="false"
+            android:layout_marginStart="10dp"
+            android:textColor="@color/black"
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:text="Chọn ảnh bìa có sẵn theo tể loại" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="@color/black"
+            android:gravity="center"
+            android:text="hoặc"/>
+
+        <Button
+            android:id="@+id/button2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textAllCaps="false"
+            android:layout_marginStart="10dp"
+            android:textColor="@color/black"
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:text="Chọn ảnh bìa trong điện thoại" />
+    </LinearLayout>
+
+
+
+
+
+
 
     <ImageView
         android:id="@+id/imgCoverStory"

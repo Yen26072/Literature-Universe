@@ -13,6 +13,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.example.literatureuniverse.R;
+import com.example.literatureuniverse.activity.FilterStory;
 import com.example.literatureuniverse.activity.FollowingStory;
 import com.example.literatureuniverse.activity.HomeAdminSuper;
 import com.example.literatureuniverse.activity.Library;
@@ -135,6 +136,9 @@ public class BaseActivity extends AppCompatActivity {
         if ("admin_super".equals(currentRole)){
             inflater.inflate(R.menu.header_menu_admin_super, popup.getMenu());
         }
+        if("reader".equals(currentRole) || "author".equals(currentRole)){
+            inflater.inflate(R.menu.menu_left, popup.getMenu());
+        }
 
         // Ép PopupMenu hiển thị icon
         try {
@@ -153,7 +157,27 @@ public class BaseActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        popup.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            if(id == R.id.menu_home2){
+                Intent intent = new Intent(BaseActivity.this, MainActivity.class);
+                startActivity(intent);
+                return true;
+            }
+            if(id == R.id.menu_home1){
+                Intent intent = new Intent(BaseActivity.this, HomeAdminSuper.class);
+                startActivity(intent);
+                return true;
+            }
+            if(id == R.id.menu_filter){
+                Intent intent = new Intent(BaseActivity.this, FilterStory.class);
+                startActivity(intent);
+                return true;
+            }
+            return true;
+        });
 
+        popup.show();
 
 
         popup.show();
@@ -164,9 +188,6 @@ public class BaseActivity extends AppCompatActivity {
             popup = new PopupMenu(this, view);
             popup.getMenuInflater().inflate(R.menu.header_menu_avatar, popup.getMenu());
         }
-//        PopupMenu popup = new PopupMenu(this, view);
-//        MenuInflater inflater = popup.getMenuInflater();
-//        inflater.inflate(R.menu.header_menu_avatar, popup.getMenu());
 
         // Nếu là admin_super thì ẩn các mục khác ngoài Logout
         if ("admin_super".equals(currentRole)) {

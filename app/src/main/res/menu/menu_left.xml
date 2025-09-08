@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_home2"
+        android:title="Trang chủ"
+        android:icon="@drawable/ic_mailbox" />
+    <item
+        android:id="@+id/menu_filter"
+        android:title="Lọc truyện"
+        android:icon="@drawable/ic_mailbox" />
+
+</menu>
