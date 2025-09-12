@@ -1,10 +1,13 @@
 package com.example.literatureuniverse.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.icu.text.SimpleDateFormat;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.literatureuniverse.R;
+import com.example.literatureuniverse.activity.Login;
 import com.example.literatureuniverse.model.Comment;
 import com.example.literatureuniverse.model.CommentReply;
 import com.example.literatureuniverse.model.CommentNotification;
@@ -32,6 +36,8 @@ import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.database.annotations.Nullable;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -96,6 +102,15 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         holder.txtCommentTime.setText(formatTime(comment.getCreatedAt()));
         loadUser(comment.getUserId(), holder.txtUserName, holder.imgAvatarComment);
 
+        String currentUid = FirebaseAuth.getInstance().getCurrentUser() != null
+                ? FirebaseAuth.getInstance().getCurrentUser().getUid()
+                : null;
+        if (currentUid != null && currentUid.equals(comment.getUserId())) {
+            holder.txtReportButton.setVisibility(View.GONE);
+        } else {
+            holder.txtReportButton.setVisibility(View.VISIBLE);
+        }
+
         if (comment.getChapterId() != null) {
             holder.txtChapterTitle.setVisibility(View.VISIBLE);
             String chapterId = comment.getChapterId();
@@ -107,13 +122,13 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                 DatabaseReference chapterRef = FirebaseDatabase.getInstance()
                         .getReference("chapters")
                         .child(storyId)
-                        .child(chapterId)
-                        .child("title");
+                        .child(chapterId);
 
                 chapterRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        String title = snapshot.getValue(String.class);
+                        String title = snapshot.child("title").getValue(String.class);
+                        String content = snapshot.child("content").getValue(String.class);
                         if (title != null) {
                             chapterTitleCache.put(chapterId, title); // ✅ Lưu cache
                             holder.txtChapterTitle.setText(title);
@@ -142,10 +157,18 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                 ImageView imgReplyAvatar = replyView.findViewById(R.id.imgAvatarReply);
                 TextView txtChapterTitleReply = replyView.findViewById(R.id.txtChapterTitleReply);
                 TextView txtReplyButtonReply = replyView.findViewById(R.id.txtReplyButtonReply);
+                TextView txtReportButtonReply = replyView.findViewById(R.id.txtReportButtonReply);
 
                 tvReplyContent.setText(reply.getContent());
                 tvReplyTime.setText(formatTime(reply.getCreatedAt()));
                 loadUser(reply.getUserId(), tvReplyUsername, imgReplyAvatar);
+
+                // Ẩn nút Báo cáo nếu user hiện tại chính là chủ của reply
+                if (currentUid != null && currentUid.equals(reply.getUserId())) {
+                    txtReportButtonReply.setVisibility(View.GONE);
+                } else {
+                    txtReportButtonReply.setVisibility(View.VISIBLE);
+                }
 
                 // ✅ Dùng lại tên chương đã có từ comment cha
                 String chapterId = comment.getChapterId();
@@ -177,8 +200,24 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         holder.txtReplyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                holder.replyInputLayout.setVisibility(View.VISIBLE);
-                holder.editTextReply.requestFocus();
+                if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+                    // Chưa đăng nhập → chuyển sang LoginActivity
+                    Intent intent = new Intent(context, Login.class);
+                    intent.putExtra("isStoryId", comment.getStoryId());
+                    intent.putExtra("isChapterId", comment.getChapterId());
+                    Log.d("CommentAdapter", "storyId = " + comment.getStoryId() + ", chapterId = " + comment.getChapterId());
+                    // ✅ Truyền thêm thông tin đang ở đâu: HomeStory hay ChapterDetail
+                    if (context instanceof com.example.literatureuniverse.activity.HomeStory) {
+                        intent.putExtra("source", "HomeStory");
+                    } else if (context instanceof com.example.literatureuniverse.activity.ChapterDetail) {
+                        intent.putExtra("source", "ChapterDetail");
+                    }
+                    context.startActivity(intent);
+                } else {
+                    // Đã đăng nhập → hiện khung reply
+                    holder.replyInputLayout.setVisibility(View.VISIBLE);
+                    holder.editTextReply.requestFocus();
+                }
             }
         });
         // ✅ XỬ LÝ SỰ KIỆN GỬI REPLY
@@ -404,7 +443,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
     }
 
     public static class CommentViewHolder extends RecyclerView.ViewHolder {
-        TextView tvCommentContent, txtReplyButton, txtUserName, txtCommentTime, txtChapterTitle;
+        TextView tvCommentContent, txtReplyButton, txtUserName, txtCommentTime, txtChapterTitle, txtReportButton;
         LinearLayout repliesContainer, replyInputLayout;
         ImageView imgAvatarComment;
         Button buttonSendReply;
@@ -422,6 +461,7 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             replyInputLayout = itemView.findViewById(R.id.replyInputLayout);
             buttonSendReply = itemView.findViewById(R.id.buttonSendReply);
             editTextReply = itemView.findViewById(R.id.editTextReply);
+            txtReportButton = itemView.findViewById(R.id.txtReportButton);
         }
     }
 }

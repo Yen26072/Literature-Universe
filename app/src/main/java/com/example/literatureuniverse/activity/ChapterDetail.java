@@ -48,6 +48,7 @@ import com.example.literatureuniverse.model.CommentReply;
 import com.example.literatureuniverse.model.Story;
 import com.example.literatureuniverse.model.User;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -71,7 +72,8 @@ public class ChapterDetail extends BaseActivity {
     ImageView imgStar, imgPin, imgAdd, imgFont;
     TextView txtPreviousChapter, txtNextChapter, txtTitle, txtContent, txtStoryName, txtAuthorName, txtPreviousChapter2, txtNextChapter2, txtStoryHome, txtStoryHome2;
     private DatabaseReference storyRef, likesRef, userRef2, userRef, chapterRef, bookmarkRef, followRef, libraryRef, commentRef, commentRef2, replyRef;
-    private String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+    private String userId = null;
+    private FirebaseUser firebaseUser= FirebaseAuth.getInstance().getCurrentUser();
     private String storyId, currentChapterId;
     private List<Chapter> chapterList = new ArrayList<>();
     private int currentIndex = -1;
@@ -130,14 +132,24 @@ public class ChapterDetail extends BaseActivity {
         tabContainerComment = findViewById(R.id.tabContainerComment);
         paginationScrollComment = findViewById(R.id.tabScrollComment);
 
-        edtComment.clearFocus();
-        scrollView.post(() -> scrollView.requestFocus());
+//        edtComment.clearFocus();
+//        scrollView.post(() -> scrollView.requestFocus());
 //        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN| WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
 //        View dummyView = findViewById(R.id.main).getRootView().findViewById(android.R.id.content);
 //        if (dummyView != null) {
 //            dummyView.requestFocus();
 //        }
 
+//        userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        if (firebaseUser != null) {
+            userId = firebaseUser.getUid();
+        }
+        if(userId == null){
+            imgAvatarComment.setVisibility(View.GONE);
+        }
+
+        Log.d("Chapter", "Chapter opened");
         storyId = getIntent().getStringExtra("storyId");
         currentChapterId = getIntent().getStringExtra("chapterId");
         prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
@@ -148,86 +160,100 @@ public class ChapterDetail extends BaseActivity {
 
         storyRef = FirebaseDatabase.getInstance().getReference("stories").child(storyId);
         likesRef = FirebaseDatabase.getInstance().getReference("likes").child(storyId);
-        userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
-        userRef2 = FirebaseDatabase.getInstance().getReference("users");
         chapterRef = FirebaseDatabase.getInstance().getReference("chapters").child(storyId);
-        bookmarkRef = FirebaseDatabase.getInstance().getReference("bookmarks").child(userId).child(storyId);
-        followRef = FirebaseDatabase.getInstance().getReference("follows").child(userId).child(storyId);
-        libraryRef = FirebaseDatabase.getInstance().getReference("libraries").child(userId).child(storyId);
+        userRef2 = FirebaseDatabase.getInstance().getReference("users");
+        if(userId != null){
+            userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
+            bookmarkRef = FirebaseDatabase.getInstance().getReference("bookmarks").child(userId).child(storyId);
+            followRef = FirebaseDatabase.getInstance().getReference("follows").child(userId).child(storyId);
+            libraryRef = FirebaseDatabase.getInstance().getReference("libraries").child(userId).child(storyId);
+        }
         commentRef = FirebaseDatabase.getInstance().getReference("comments");
         replyRef = FirebaseDatabase.getInstance().getReference("commentReplies");
 
         // Gửi bình luận
         btnSendComment.setOnClickListener(v -> sendComment());
 
-        // Khi mở chương → kiểm tra đã like chưa
-        likesRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    // Đã like → icon đỏ
-                    imgStar.setColorFilter(ContextCompat.getColor(imgStar.getContext(), R.color.red), PorterDuff.Mode.SRC_IN);
-                } else {
-                    // Chưa like → icon xám
-                    imgStar.setColorFilter(ContextCompat.getColor(imgStar.getContext(), R.color.gray), PorterDuff.Mode.SRC_IN);
-                }
-            }
+        if(userId == null){
+            imgStar.setEnabled(false);
+            imgPin.setEnabled(false);
+            imgAdd.setEnabled(false);
+            imgStar.setColorFilter(ContextCompat.getColor(imgStar.getContext(), R.color.gray), PorterDuff.Mode.SRC_IN);
+            imgPin.setColorFilter(ContextCompat.getColor(this, R.color.gray));
+        }
+        else{
+            // 🔹 Xử lý khi nhấn vào imgAdd
+            imgAdd.setOnClickListener(v -> showPopupMenu(v));
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
-
-        // Khi click
-        imgStar.setOnClickListener(v -> {
+            // Khi mở chương → kiểm tra đã like chưa
             likesRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if (snapshot.exists()) {
-                        // Nếu đã like → bỏ like
-                        likesRef.child(userId).removeValue();
-                        storyRef.child("likesCount").setValue(ServerValue.increment(-1));
-                        imgStar.setColorFilter(ContextCompat.getColor(imgStar.getContext(), R.color.gray), PorterDuff.Mode.SRC_IN);
-                    } else {
-                        // Nếu chưa like → thêm like
-                        likesRef.child(userId).setValue(true);
-                        storyRef.child("likesCount").setValue(ServerValue.increment(1));
+                        // Đã like → icon đỏ
                         imgStar.setColorFilter(ContextCompat.getColor(imgStar.getContext(), R.color.red), PorterDuff.Mode.SRC_IN);
+                    } else {
+                        // Chưa like → icon xám
+                        imgStar.setColorFilter(ContextCompat.getColor(imgStar.getContext(), R.color.gray), PorterDuff.Mode.SRC_IN);
                     }
                 }
 
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {}
             });
-        });
 
-        bookmarkData.put("chapterId", currentChapterId);
-        bookmarkData.put("timestamp", System.currentTimeMillis());
-        // Khi bấm icon ghim
-        imgPin.setOnClickListener(v -> {
-            bookmarkRef.get().addOnSuccessListener(snapshot -> {
-                if (snapshot.exists()) {
-                    String savedChapterId = snapshot.child("chapterId").getValue(String.class);
-                    if (currentChapterId.equals(savedChapterId)) {
-                        // Nếu đang ghim chính nó → bỏ ghim
-                        bookmarkRef.removeValue().addOnSuccessListener(aVoid -> {
-                            imgPin.setColorFilter(ContextCompat.getColor(this, R.color.gray));
-                            Toast.makeText(this, "Đã bỏ bookmark", Toast.LENGTH_SHORT).show();
-                        });
-                        return;
+            // Khi click
+            imgStar.setOnClickListener(v -> {
+                likesRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            // Nếu đã like → bỏ like
+                            likesRef.child(userId).removeValue();
+                            storyRef.child("likesCount").setValue(ServerValue.increment(-1));
+                            imgStar.setColorFilter(ContextCompat.getColor(imgStar.getContext(), R.color.gray), PorterDuff.Mode.SRC_IN);
+                        } else {
+                            // Nếu chưa like → thêm like
+                            likesRef.child(userId).setValue(true);
+                            storyRef.child("likesCount").setValue(ServerValue.increment(1));
+                            imgStar.setColorFilter(ContextCompat.getColor(imgStar.getContext(), R.color.red), PorterDuff.Mode.SRC_IN);
+                        }
                     }
-                }
 
-                // Ghim chương mới (ghi đè chương cũ)
-                bookmarkRef.setValue(bookmarkData)
-                        .addOnSuccessListener(aVoid -> {
-                            imgPin.setColorFilter(ContextCompat.getColor(this, R.color.red));
-                            Toast.makeText(this, "Đã lưu bookmark", Toast.LENGTH_SHORT).show();
-                        })
-                        .addOnFailureListener(e -> {
-                            Toast.makeText(this, "Lỗi lưu bookmark", Toast.LENGTH_SHORT).show();
-                        });
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {}
+                });
             });
-        });
+
+            bookmarkData.put("chapterId", currentChapterId);
+            bookmarkData.put("timestamp", System.currentTimeMillis());
+            // Khi bấm icon ghim
+            imgPin.setOnClickListener(v -> {
+                bookmarkRef.get().addOnSuccessListener(snapshot -> {
+                    if (snapshot.exists()) {
+                        String savedChapterId = snapshot.child("chapterId").getValue(String.class);
+                        if (currentChapterId.equals(savedChapterId)) {
+                            // Nếu đang ghim chính nó → bỏ ghim
+                            bookmarkRef.removeValue().addOnSuccessListener(aVoid -> {
+                                imgPin.setColorFilter(ContextCompat.getColor(this, R.color.gray));
+                                Toast.makeText(this, "Đã bỏ bookmark", Toast.LENGTH_SHORT).show();
+                            });
+                            return;
+                        }
+                    }
+
+                    // Ghim chương mới (ghi đè chương cũ)
+                    bookmarkRef.setValue(bookmarkData)
+                            .addOnSuccessListener(aVoid -> {
+                                imgPin.setColorFilter(ContextCompat.getColor(this, R.color.red));
+                                Toast.makeText(this, "Đã lưu bookmark", Toast.LENGTH_SHORT).show();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(this, "Lỗi lưu bookmark", Toast.LENGTH_SHORT).show();
+                            });
+                });
+            });
+        }
 
         loadStory();
         loadChaptersFromFirebase();
@@ -236,15 +262,14 @@ public class ChapterDetail extends BaseActivity {
         txtPreviousChapter2.setOnClickListener(v -> showChapter(currentIndex - 1, false));
         txtNextChapter2.setOnClickListener(v -> showChapter(currentIndex + 1, false));
 
-        // 🔹 Xử lý khi nhấn vào imgAdd
-        imgAdd.setOnClickListener(v -> showPopupMenu(v));
-
         // Áp dụng cấu hình đã lưu
         applySavedSettings();
         imgFont.setOnClickListener(v -> showFontSettingsPopup(v));
 
         txtStoryHome.setOnClickListener(v -> openHomeStory());
         txtStoryHome2.setOnClickListener(v -> openHomeStory());
+
+        scrollView.postDelayed(() -> scrollView.fullScroll(ScrollView.FOCUS_UP), 50);
     }
 
     private void openHomeStory() {
@@ -304,84 +329,93 @@ public class ChapterDetail extends BaseActivity {
     }
 
     private void sendComment() {
-        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    Boolean isMuted = snapshot.child("isMuted").getValue(Boolean.class);
-                    Long muteUntil = snapshot.child("muteUntil").getValue(Long.class);
-                    long now = System.currentTimeMillis();
-                    if (Boolean.TRUE.equals(isMuted) && muteUntil != null && muteUntil > now) {
-                        Toast.makeText(ChapterDetail.this, "Bạn đang bị chặn bình luận", Toast.LENGTH_LONG).show();
+        if(userId == null){
+            Intent intent = new Intent(ChapterDetail.this, Login.class);
+            intent.putExtra("isStoryId", storyId);
+            intent.putExtra("isChapterId", currentChapterId);
+            intent.putExtra("source", "ChapterDetail");
+            startActivity(intent);
+        }
+        else{
+            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        Boolean isMuted = snapshot.child("isMuted").getValue(Boolean.class);
+                        Long muteUntil = snapshot.child("muteUntil").getValue(Long.class);
+                        long now = System.currentTimeMillis();
+                        if (Boolean.TRUE.equals(isMuted) && muteUntil != null && muteUntil > now) {
+                            Toast.makeText(ChapterDetail.this, "Bạn đang bị chặn bình luận", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                    }
+
+                    String content = edtComment.getText().toString().trim();
+                    if (content.isEmpty()) {
+                        edtComment.setError("Vui lòng nhập nội dung");
                         return;
                     }
-                }
 
-                String content = edtComment.getText().toString().trim();
-                if (content.isEmpty()) {
-                    edtComment.setError("Vui lòng nhập nội dung");
-                    return;
-                }
+                    String commentId = commentRef.push().getKey();
+                    long timestamp = System.currentTimeMillis();
 
-                String commentId = commentRef.push().getKey();
-                long timestamp = System.currentTimeMillis();
+                    Comment comment = new Comment(
+                            commentId,
+                            userId,
+                            storyId,
+                            currentChapterId,
+                            null,
+                            content,
+                            timestamp,
+                            false, null, null,
+                            0,
+                            false, null
+                    );
 
-                Comment comment = new Comment(
-                        commentId,
-                        userId,
-                        storyId,
-                        currentChapterId,
-                        null,
-                        content,
-                        timestamp,
-                        false, null, null,
-                        0,
-                        false, null
-                );
-
-                commentRef.child(commentId).setValue(comment)
-                        .addOnSuccessListener(unused -> {
-                            storyRef.child("commentsCount").runTransaction(new Transaction.Handler() {
-                                @NonNull
-                                @Override
-                                public Transaction.Result doTransaction(@NonNull MutableData currentData) {
-                                    Long count = currentData.getValue(Long.class);
-                                    currentData.setValue((count == null ? 0 : count + 1));
-                                    return Transaction.success(currentData);
-                                }
-
-                                @Override
-                                public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
-                                    if (error != null) {
-                                        Log.e("CommentCountUpdate", "Transaction failed: " + error.getMessage());
+                    commentRef.child(commentId).setValue(comment)
+                            .addOnSuccessListener(unused -> {
+                                storyRef.child("commentsCount").runTransaction(new Transaction.Handler() {
+                                    @NonNull
+                                    @Override
+                                    public Transaction.Result doTransaction(@NonNull MutableData currentData) {
+                                        Long count = currentData.getValue(Long.class);
+                                        currentData.setValue((count == null ? 0 : count + 1));
+                                        return Transaction.success(currentData);
                                     }
-                                }
+
+                                    @Override
+                                    public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
+                                        if (error != null) {
+                                            Log.e("CommentCountUpdate", "Transaction failed: " + error.getMessage());
+                                        }
+                                    }
+                                });
+
+                                // ✅ Thêm comment mới vào list gốc rồi cập nhật phân trang
+                                recyclerComment.post(() -> {
+                                    allComments.add(0, comment);
+                                    totalCommentPages = (int) Math.ceil((double) allComments.size() / commentsPerPage);
+
+                                    // Nếu đang ở trang 1 thì hiển thị ngay
+                                    if (currentCommentPage == 1) {
+                                        displayCurrentCommentPage();
+                                        recyclerComment.scrollToPosition(0);
+                                    } else {
+                                        // Nếu không ở trang 1 thì có thể load lại tab hoặc thông báo
+                                        updateCommentPagination();
+                                    }
+                                });
+
+                                edtComment.setText("");
                             });
+                }
 
-                            // ✅ Thêm comment mới vào list gốc rồi cập nhật phân trang
-                            recyclerComment.post(() -> {
-                                allComments.add(0, comment);
-                                totalCommentPages = (int) Math.ceil((double) allComments.size() / commentsPerPage);
-
-                                // Nếu đang ở trang 1 thì hiển thị ngay
-                                if (currentCommentPage == 1) {
-                                    displayCurrentCommentPage();
-                                    recyclerComment.scrollToPosition(0);
-                                } else {
-                                    // Nếu không ở trang 1 thì có thể load lại tab hoặc thông báo
-                                    updateCommentPagination();
-                                }
-                            });
-
-                            edtComment.setText("");
-                        });
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                Toast.makeText(ChapterDetail.this, "Lỗi kiểm tra tài khoản", Toast.LENGTH_SHORT).show();
-            }
-        });
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    Toast.makeText(ChapterDetail.this, "Lỗi kiểm tra tài khoản", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     private void updateCommentPagination() {
@@ -549,6 +583,13 @@ public class ChapterDetail extends BaseActivity {
             int color = ((ColorDrawable) v.getBackground()).getColor();
             txtContent.setBackgroundColor(color);
             saveSetting("bgColor", color);
+
+            // Nếu chọn bgColor5 thì text trắng, ngược lại text đen
+            if (v.getId() == R.id.bgColor5) {
+                txtContent.setTextColor(Color.WHITE);
+            } else {
+                txtContent.setTextColor(Color.BLACK);
+            }
         };
         bgColor1.setOnClickListener(bgClickListener);
         bgColor2.setOnClickListener(bgClickListener);
@@ -662,18 +703,26 @@ public class ChapterDetail extends BaseActivity {
     private void showChapter(int index, boolean firstChapter) {
         if (index < 0 || index >= chapterList.size()) return;
 
+
+
         currentIndex = index;
         Chapter chapter = chapterList.get(index);
         currentChapterId = chapter.getChapterId();
 
+        String text = chapter.getContent();
+        text = text.replace("\n", "\n\n"); // tự thêm dòng trống sau mỗi đoạn
+        txtContent.setText(text);
+
         txtTitle.setText(chapter.getTitle());
-        txtContent.setText(chapter.getContent());
+//        txtContent.setText(chapter.getContent());
         txtPreviousChapter.setText("< Chương trước");
         txtNextChapter.setText("Chương sau >");
         txtPreviousChapter2.setText("< Chương trước");
         txtNextChapter2.setText("Chương sau >");
 
-        loadImgPinStatus(currentChapterId);
+        if(userId != null){
+            loadImgPinStatus(currentChapterId);
+        }
         loadComments();
 
         if (!firstChapter){

@@ -31,6 +31,7 @@ public class Login extends AppCompatActivity {
     EditText edtEmail, edtPassword;
     Button btnLogin;
     DatabaseReference usersRef;
+    String storyId, chapterId, source;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -50,6 +51,11 @@ public class Login extends AppCompatActivity {
         txtError = findViewById(R.id.txtErrorLogin);
         txtRegisterLogin = findViewById(R.id.txtRegisterLogin);
         usersRef = FirebaseDatabase.getInstance().getReference("users");
+
+        storyId = getIntent().getStringExtra("isStoryId");
+        chapterId = getIntent().getStringExtra("isChapterId");
+        source = getIntent().getStringExtra("source");
+
 
         txtRegisterLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -105,8 +111,30 @@ public class Login extends AppCompatActivity {
                                             startActivity(new Intent(Login.this, HomeAdminSuper.class));
                                             finish();
                                         } else if("reader".equals(role) || "author".equals(role)){
-                                            startActivity(new Intent(Login.this, MainActivity.class));
-                                            finish();
+                                            if(storyId != null && chapterId == null){
+                                                Intent intent = new Intent(Login.this, HomeStory.class);
+                                                intent.putExtra("storyId", storyId);
+                                                Log.d("LoginHomeStory", "StoryId = " + storyId);
+                                                startActivity(intent);
+                                                finish();
+                                            } else if(storyId != null && chapterId != null && "ChapterDetail".equals(source)){
+                                                Intent intent = new Intent(Login.this, ChapterDetail.class);
+                                                intent.putExtra("storyId", storyId);
+                                                intent.putExtra("chapterId", chapterId);
+                                                Log.d("LoginHomeStory", "chapterId = " + chapterId);
+                                                startActivity(intent);
+                                                finish();
+                                            } else if(storyId != null && chapterId != null && "HomeStory".equals(source)){
+                                                Intent intent = new Intent(Login.this, HomeStory.class);
+                                                intent.putExtra("storyId", storyId);
+                                                startActivity(intent);
+                                                finish();
+                                            }
+                                            if(storyId == null){
+                                                startActivity(new Intent(Login.this, MainActivity.class));
+                                                finish();
+                                            }
+
                                         }
 
                                     } else {

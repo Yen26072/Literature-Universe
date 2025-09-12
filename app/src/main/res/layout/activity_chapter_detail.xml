@@ -134,6 +134,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:lineSpacingExtra="7dp"
+            android:lineSpacingMultiplier="1.6"
             android:textColor="@color/black"
             android:layout_marginTop="15dp"
             android:paddingHorizontal="5dp"

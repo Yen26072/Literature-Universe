@@ -81,7 +81,8 @@ public class HomeStory extends BaseActivity {
     private List<Comment> commentList = new ArrayList<>();
     private Map<String, List<CommentReply>> replyMap = new HashMap<>();
     private CommentAdapter commentAdapter;
-    private String currentUserId = FirebaseAuth.getInstance().getUid();
+    private FirebaseUser firebaseUser= FirebaseAuth.getInstance().getCurrentUser();
+    private String currentUserId = null;
     private String chapterId = null;
     private HashMap<String, User> userMap = new HashMap<>();
 
@@ -146,6 +147,8 @@ public class HomeStory extends BaseActivity {
         commentAdapter = new CommentAdapter(this, new ArrayList<>(), replyMap, userMap);
         recyclerComment.setAdapter(commentAdapter);
 
+        Log.d("HomeStory", "homestory opened");
+
         storyId = getIntent().getStringExtra("storyId");
         commentnotificationId = getIntent().getStringExtra("commentnotificationId");
         if (storyId == null) {
@@ -154,10 +157,16 @@ public class HomeStory extends BaseActivity {
             return;
         }
 
+        if (firebaseUser != null) {
+            currentUserId = firebaseUser.getUid();
+        }
+
         storyRef = FirebaseDatabase.getInstance().getReference("stories").child(storyId);
         chapterRef = FirebaseDatabase.getInstance().getReference("chapters").child(storyId);
         tagRef = FirebaseDatabase.getInstance().getReference("tags");
-        userRef = FirebaseDatabase.getInstance().getReference("users").child(currentUserId);
+        if(currentUserId != null){
+            userRef = FirebaseDatabase.getInstance().getReference("users").child(currentUserId);
+        }
         userRef2 = FirebaseDatabase.getInstance().getReference("users");
         commentRef = FirebaseDatabase.getInstance().getReference("comments");
         replyRef = FirebaseDatabase.getInstance().getReference("commentReplies");
@@ -172,91 +181,99 @@ public class HomeStory extends BaseActivity {
     }
 
     private void sendComment() {
-        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                if (snapshot.exists()) {
-                    Boolean isMuted = snapshot.child("isMuted").getValue(Boolean.class);
-                    Long muteUntil = snapshot.child("muteUntil").getValue(Long.class);
-                    long now = System.currentTimeMillis();
-                    if (Boolean.TRUE.equals(isMuted) && muteUntil != null && muteUntil > now) {
-                        Toast.makeText(HomeStory.this, "Bạn đang bị chặn bình luận", Toast.LENGTH_LONG).show();
+        if(currentUserId == null || currentUserId.isEmpty()){
+            Intent intent = new Intent(HomeStory.this, Login.class);
+            intent.putExtra("isStoryId", storyId);
+            intent.putExtra("source", "HomeStory");
+            startActivity(intent);
+        }
+        else{
+            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        Boolean isMuted = snapshot.child("isMuted").getValue(Boolean.class);
+                        Long muteUntil = snapshot.child("muteUntil").getValue(Long.class);
+                        long now = System.currentTimeMillis();
+                        if (Boolean.TRUE.equals(isMuted) && muteUntil != null && muteUntil > now) {
+                            Toast.makeText(HomeStory.this, "Bạn đang bị chặn bình luận", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                    }
+
+                    String content = edtComment.getText().toString().trim();
+                    if (content.isEmpty()) {
+                        edtComment.setError("Vui lòng nhập nội dung");
                         return;
                     }
-                }
 
-                String content = edtComment.getText().toString().trim();
-                if (content.isEmpty()) {
-                    edtComment.setError("Vui lòng nhập nội dung");
-                    return;
-                }
+                    String commentId = commentRef.push().getKey();
+                    long timestamp = System.currentTimeMillis();
 
-                String commentId = commentRef.push().getKey();
-                long timestamp = System.currentTimeMillis();
+                    Comment comment = new Comment(
+                            commentId,
+                            currentUserId,
+                            storyId,
+                            null,
+                            null,
+                            content,
+                            timestamp,
+                            false, null, null,
+                            0,
+                            false, null
+                    );
 
-                Comment comment = new Comment(
-                        commentId,
-                        currentUserId,
-                        storyId,
-                        null,
-                        null,
-                        content,
-                        timestamp,
-                        false, null, null,
-                        0,
-                        false, null
-                );
-
-                commentRef.child(commentId).setValue(comment)
-                        .addOnSuccessListener(unused -> {
-                            DatabaseReference targetRef;
-                            if (chapterId == null || chapterId.isEmpty()) {
-                                targetRef = FirebaseDatabase.getInstance().getReference("stories").child(storyId);
-                            } else {
-                                targetRef = FirebaseDatabase.getInstance().getReference("chapters").child(storyId).child(chapterId);
-                            }
-
-                            targetRef.child("commentsCount").runTransaction(new Transaction.Handler() {
-                                @NonNull
-                                @Override
-                                public Transaction.Result doTransaction(@NonNull MutableData currentData) {
-                                    Long count = currentData.getValue(Long.class);
-                                    currentData.setValue((count == null ? 0 : count + 1));
-                                    return Transaction.success(currentData);
-                                }
-
-                                @Override
-                                public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
-                                    if (error != null) {
-                                        Log.e("CommentCountUpdate", "Transaction failed: " + error.getMessage());
-                                    }
-                                }
-                            });
-
-                            // ✅ Thêm comment mới vào list gốc rồi cập nhật phân trang
-                            recyclerComment.post(() -> {
-                                allComments.add(0, comment);
-                                totalCommentPages = (int) Math.ceil((double) allComments.size() / commentsPerPage);
-
-                                // Nếu đang ở trang 1 thì hiển thị ngay
-                                if (currentCommentPage == 1) {
-                                    displayCurrentCommentPage();
-                                    recyclerComment.scrollToPosition(0);
+                    commentRef.child(commentId).setValue(comment)
+                            .addOnSuccessListener(unused -> {
+                                DatabaseReference targetRef;
+                                if (chapterId == null || chapterId.isEmpty()) {
+                                    targetRef = FirebaseDatabase.getInstance().getReference("stories").child(storyId);
                                 } else {
-                                    // Nếu không ở trang 1 thì có thể load lại tab hoặc thông báo
-                                    updateCommentPagination();
+                                    targetRef = FirebaseDatabase.getInstance().getReference("chapters").child(storyId).child(chapterId);
                                 }
+
+                                targetRef.child("commentsCount").runTransaction(new Transaction.Handler() {
+                                    @NonNull
+                                    @Override
+                                    public Transaction.Result doTransaction(@NonNull MutableData currentData) {
+                                        Long count = currentData.getValue(Long.class);
+                                        currentData.setValue((count == null ? 0 : count + 1));
+                                        return Transaction.success(currentData);
+                                    }
+
+                                    @Override
+                                    public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
+                                        if (error != null) {
+                                            Log.e("CommentCountUpdate", "Transaction failed: " + error.getMessage());
+                                        }
+                                    }
+                                });
+
+                                // ✅ Thêm comment mới vào list gốc rồi cập nhật phân trang
+                                recyclerComment.post(() -> {
+                                    allComments.add(0, comment);
+                                    totalCommentPages = (int) Math.ceil((double) allComments.size() / commentsPerPage);
+
+                                    // Nếu đang ở trang 1 thì hiển thị ngay
+                                    if (currentCommentPage == 1) {
+                                        displayCurrentCommentPage();
+                                        recyclerComment.scrollToPosition(0);
+                                    } else {
+                                        // Nếu không ở trang 1 thì có thể load lại tab hoặc thông báo
+                                        updateCommentPagination();
+                                    }
+                                });
+
+                                edtComment.setText("");
                             });
+                }
 
-                            edtComment.setText("");
-                        });
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                Toast.makeText(HomeStory.this, "Lỗi kiểm tra tài khoản", Toast.LENGTH_SHORT).show();
-            }
-        });
+                @Override
+                public void onCancelled(DatabaseError error) {
+                    Toast.makeText(HomeStory.this, "Lỗi kiểm tra tài khoản", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
 
@@ -605,22 +622,28 @@ public class HomeStory extends BaseActivity {
                 Glide.with(HomeStory.this).load(story.getCoverUrl()).into(imgCover);
                 Glide.with(HomeStory.this).load(story.getCoverUrl()).into(imgCover2);
 
-                userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        String avatarUrl = snapshot.child("avatarUrl").getValue(String.class);
-                        if (avatarUrl != null && !avatarUrl.isEmpty()) {
-                            Glide.with(getApplicationContext())
-                                    .load(avatarUrl)
-                                    .placeholder(R.drawable.ic_launcher_background)
-                                    .circleCrop()
-                                    .into(imgAvatarComment);
+                if(currentUserId == null){
+                    imgAvatarComment.setVisibility(View.GONE);
+                }
+                else {
+                    userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                            String avatarUrl = snapshot.child("avatarUrl").getValue(String.class);
+                            if (avatarUrl != null && !avatarUrl.isEmpty()) {
+                                Glide.with(getApplicationContext())
+                                        .load(avatarUrl)
+                                        .placeholder(R.drawable.ic_launcher_background)
+                                        .circleCrop()
+                                        .into(imgAvatarComment);
+                            }
                         }
-                    }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {}
-                });
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError error) {}
+                    });
+                }
+
 
                 loadOtherStoriesByAuthor(authorId, storyId);
             }
