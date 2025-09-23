@@ -177,21 +177,31 @@ public class AddChapter extends BaseActivity {
         chapter.setCreatedAt(now);
         chapter.setUpdatedAt(now);
 
-        chaptersRef.child(currentStory.getStoryId())  // 👈 sửa tại đây!
+        chaptersRef.child(currentStory.getStoryId())
                 .child(chapterId)
                 .setValue(chapter)
                 .addOnSuccessListener(aVoid -> {
                     edtChapterTitle.setText("");
                     edtChapterContent.setText("");
+
                     // ✅ Cập nhật updatedAt cho truyện
                     storyRef.child(currentStory.getStoryId())
                             .child("updatedAt")
                             .setValue(now);
+
                     // ✅ Cập nhật latestChapter
                     DatabaseReference latestChapterRef = storyRef.child(currentStory.getStoryId()).child("latestChapter");
                     latestChapterRef.child("chapterId").setValue(chapterId);
                     latestChapterRef.child("title").setValue(title);
                     latestChapterRef.child("createdAt").setValue(now);
+
+                    // ✅ Tăng chaptersCount
+                    storyRef.child(currentStory.getStoryId())
+                            .child("chaptersCount")
+                            .setValue((currentStory.getChaptersCount() + 1));
+
+                    // đồng bộ luôn object currentStory trong app
+                    currentStory.setChaptersCount(currentStory.getChaptersCount() + 1);
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(this, "Lỗi: " + e.getMessage(), Toast.LENGTH_SHORT).show();

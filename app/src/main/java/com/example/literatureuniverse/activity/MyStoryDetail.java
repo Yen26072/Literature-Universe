@@ -166,6 +166,14 @@ public class MyStoryDetail extends BaseActivity {
                                     .addOnSuccessListener(aVoid -> {
                                         backupChapter(chapter, "deleted");
                                         checkAndUpdateLatestChapterAfterDelete(chapter);
+
+                                        // đồng bộ luôn object currentStory trong app
+                                        currentStory.setChaptersCount(currentStory.getChaptersCount() - 1);
+                                        // ✅ Tăng chaptersCount
+                                        storyRef.child("chaptersCount")
+                                                .setValue((currentStory.getChaptersCount()));
+
+                                        Log.d("MYSTORYDETAIL", "currentStory.getChaptersCount = " + currentStory.getChaptersCount());
                                         Toast.makeText(MyStoryDetail.this, "Đã xóa chương", Toast.LENGTH_SHORT).show();
                                     });
                         })

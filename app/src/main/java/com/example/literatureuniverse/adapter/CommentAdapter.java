@@ -127,6 +127,13 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                 chapterRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (!snapshot.exists()) {
+                            // Chương không tồn tại (đã bị xóa)
+                            chapterTitleCache.put(chapterId, "-");
+                            holder.txtChapterTitle.setText("-");
+                            notifyItemChanged(holder.getAdapterPosition());
+                            return;
+                        }
                         String title = snapshot.child("title").getValue(String.class);
                         String content = snapshot.child("content").getValue(String.class);
                         if (title != null) {

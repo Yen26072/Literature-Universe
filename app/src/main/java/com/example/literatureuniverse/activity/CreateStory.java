@@ -83,8 +83,8 @@ public class CreateStory extends BaseActivity {
     private static final int PICK_IMAGE_REQUEST = 1;
     private Uri selectedImageUri;
     private String uploadedImageUrl = null;
-    private final String CLOUD_NAME = "dzuljozzy"; // thay bằng cloud_name của bạn
-    private final String UPLOAD_PRESET = "unsigned_preset"; // thay bằng upload_preset bạn đã tạo
+    private final String CLOUD_NAME = "dzuljozzy";
+    private final String UPLOAD_PRESET = "unsigned_preset";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +106,7 @@ public class CreateStory extends BaseActivity {
         edtTitle = findViewById(R.id.edtTitle);
         edtTextMultiline = findViewById(R.id.edtTextMultiline);
         imgCoverStory = findViewById(R.id.imgCoverStory);
+
         tagsRef = FirebaseDatabase.getInstance().getReference("tags");
 
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -221,6 +222,7 @@ public class CreateStory extends BaseActivity {
         story.setViewsCount(0);
         story.setCommentsCount(0);
         story.setFollowersCount(0);
+        story.setChaptersCount(0);
         story.setDeleted(false);
 
         Log.d("DEBUG", "storyId=" + storyId + " title=" + title + " coverUrl=" + coverUrl);

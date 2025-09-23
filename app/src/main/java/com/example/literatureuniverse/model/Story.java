@@ -17,12 +17,21 @@ public class Story implements Serializable {
     private int viewsCount;
     private int commentsCount;
     private int followersCount;
+    private int chaptersCount;
     private boolean isDeleted;
     private String modifiedBy;
     private long modifiedAt;
     private LatestChapter latestChapter;
     // Trường tạm để sort, không lưu vào Firebase
     private transient long sortTime;
+
+    public int getChaptersCount() {
+        return chaptersCount;
+    }
+
+    public void setChaptersCount(int chaptersCount) {
+        this.chaptersCount = chaptersCount;
+    }
 
     public long getSortTime() {
         return sortTime;
@@ -38,6 +47,27 @@ public class Story implements Serializable {
 
     public int getCommentsCount() {
         return commentsCount;
+    }
+
+    public Story(String storyId, String title, String description, String authorId, String coverUrl, List<String> tags, String status, long createdAt, long updatedAt, int likesCount, int viewsCount, int commentsCount, int followersCount, int chaptersCount, boolean isDeleted, String modifiedBy, long modifiedAt, LatestChapter latestChapter) {
+        this.storyId = storyId;
+        this.title = title;
+        this.description = description;
+        this.authorId = authorId;
+        this.coverUrl = coverUrl;
+        this.tags = tags;
+        this.status = status;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.likesCount = likesCount;
+        this.viewsCount = viewsCount;
+        this.commentsCount = commentsCount;
+        this.followersCount = followersCount;
+        this.chaptersCount = chaptersCount;
+        this.isDeleted = isDeleted;
+        this.modifiedBy = modifiedBy;
+        this.modifiedAt = modifiedAt;
+        this.latestChapter = latestChapter;
     }
 
     public Story(String storyId, String title, String description, String authorId, String coverUrl, List<String> tags, String status, long createdAt, long updatedAt, int likesCount, int viewsCount, int commentsCount, int followersCount, boolean isDeleted, String modifiedBy, long modifiedAt, LatestChapter latestChapter) {
