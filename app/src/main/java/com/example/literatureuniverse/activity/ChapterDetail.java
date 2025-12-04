@@ -1,5 +1,6 @@
 package com.example.literatureuniverse.activity;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -10,10 +11,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -30,7 +29,6 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -38,14 +36,16 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.example.literatureuniverse.R;
 import com.example.literatureuniverse.adapter.CommentAdapter;
 import com.example.literatureuniverse.base.BaseActivity;
+import com.example.literatureuniverse.model.Appeal;
 import com.example.literatureuniverse.model.Chapter;
 import com.example.literatureuniverse.model.Comment;
 import com.example.literatureuniverse.model.CommentReply;
+import com.example.literatureuniverse.model.ReviewReport;
 import com.example.literatureuniverse.model.Story;
+import com.example.literatureuniverse.model.StoryReport;
 import com.example.literatureuniverse.model.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -59,16 +59,14 @@ import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.database.annotations.Nullable;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 public class ChapterDetail extends BaseActivity {
+    LinearLayout linearReport;
     ImageView imgStar, imgPin, imgAdd, imgFont;
     TextView txtPreviousChapter, txtNextChapter, txtTitle, txtContent, txtStoryName, txtAuthorName, txtPreviousChapter2, txtNextChapter2, txtStoryHome, txtStoryHome2;
     private DatabaseReference storyRef, likesRef, userRef2, userRef, chapterRef, bookmarkRef, followRef, libraryRef, commentRef, commentRef2, replyRef;
@@ -131,16 +129,7 @@ public class ChapterDetail extends BaseActivity {
         recyclerComment = findViewById(R.id.recyclerComment);
         tabContainerComment = findViewById(R.id.tabContainerComment);
         paginationScrollComment = findViewById(R.id.tabScrollComment);
-
-//        edtComment.clearFocus();
-//        scrollView.post(() -> scrollView.requestFocus());
-//        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN| WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);
-//        View dummyView = findViewById(R.id.main).getRootView().findViewById(android.R.id.content);
-//        if (dummyView != null) {
-//            dummyView.requestFocus();
-//        }
-
-//        userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        linearReport = findViewById(R.id.linearReport);
 
         if (firebaseUser != null) {
             userId = firebaseUser.getUid();
@@ -254,6 +243,21 @@ public class ChapterDetail extends BaseActivity {
                 });
             });
         }
+
+        storyRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!snapshot.exists()) return;
+
+                Story story = snapshot.getValue(Story.class);
+                if (story == null) return;
+                String authorId = story.getAuthorId();
+                linearReport.setOnClickListener(v -> showReportDialog(storyId, authorId, currentChapterId));
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
 
         loadStory();
         loadChaptersFromFirebase();
@@ -698,6 +702,74 @@ public class ChapterDetail extends BaseActivity {
             @Override
             public void onCancelled(@NonNull DatabaseError error) {}
         });
+    }
+
+    private void showReportDialog (String storyId, String storyOwnerId, String currentChapterId) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View view = getLayoutInflater().inflate(R.layout.dialog_report_story, null);
+        builder.setView(view);
+
+        EditText edtReason = view.findViewById(R.id.edtReportContent);
+        Button btnSend = view.findViewById(R.id.btnSendReport);
+        Button btnCancelReport = view.findViewById(R.id.btnCancelReport);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        btnSend.setOnClickListener(v -> {
+            String reason = edtReason.getText().toString().trim();
+            if (reason.isEmpty()) {
+                edtReason.setError("Vui lòng nhập lý do báo cáo");
+                return;
+            }
+
+            sendStoryReportToFirebase(storyId, storyOwnerId, currentChapterId, reason);
+            dialog.dismiss();
+        });
+
+        btnCancelReport.setOnClickListener(v -> {
+            dialog.dismiss();
+        });
+    }
+
+    private void sendStoryReportToFirebase(String storyId, String storyOwnerId, String chapterId, String reason) {
+        String reporterId = userId;
+        String reportId = FirebaseDatabase.getInstance().getReference("storyReports").push().getKey();
+        long timestamp = System.currentTimeMillis();
+
+        // Tạo đối tượng Appeal mặc định
+        Appeal appeal = new Appeal();
+        appeal.setHasAppeal(false);
+        appeal.setAppealReason("");
+        appeal.setAppealTime(0);
+        appeal.setAppealStatus("none");
+        appeal.setAppealAdminId("");
+        appeal.setAppealDecisionTime(0);
+
+        StoryReport report = new StoryReport(
+                reportId,
+                storyId,
+                chapterId,
+                reporterId,
+                storyOwnerId,
+                reason,
+                timestamp,
+                "pending",     // status
+                "",            // adminId
+                0,             // adminDecisionTime
+                "",            // adminNote
+                "",            // punishment
+                "",            // violationId
+                appeal
+        );
+
+        FirebaseDatabase.getInstance().getReference("storyReports")
+                .child(reportId)
+                .setValue(report)
+                .addOnSuccessListener(aVoid ->
+                        Toast.makeText(this, "Báo cáo đã gửi thành công", Toast.LENGTH_SHORT).show())
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Gửi báo cáo thất bại: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
     private void showChapter(int index, boolean firstChapter) {

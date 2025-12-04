@@ -44,6 +44,7 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_marginEnd="20dp"
+        android:scaleType="centerCrop"
         android:src="@drawable/ic_avatar"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"

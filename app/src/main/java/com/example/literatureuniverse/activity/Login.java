@@ -110,7 +110,11 @@ public class Login extends AppCompatActivity {
                                         if ("admin_super".equals(role)) {
                                             startActivity(new Intent(Login.this, HomeAdminSuper.class));
                                             finish();
-                                        } else if("reader".equals(role) || "author".equals(role)){
+                                        }
+                                        if ("admin".equals(role)) {
+                                            startActivity(new Intent(Login.this, HomeAdmin.class));
+                                            finish();
+                                        }else if("reader".equals(role) || "author".equals(role)){
                                             if(storyId != null && chapterId == null){
                                                 Intent intent = new Intent(Login.this, HomeStory.class);
                                                 intent.putExtra("storyId", storyId);

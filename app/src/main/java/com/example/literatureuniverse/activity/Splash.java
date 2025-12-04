@@ -30,6 +30,9 @@ public class Splash extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
         FirebaseApp.initializeApp(this);
         Log.d("Test", "Splash onCreate");
         Handler handler = new Handler();

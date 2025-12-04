@@ -123,10 +123,14 @@ public class AddChapter extends BaseActivity {
         });
 
         btnSelectFile.setOnClickListener(v -> {
-            Intent fileIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-            fileIntent.setType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-            fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
-            startActivityForResult(fileIntent, PICK_DOCX_FILE);
+            Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("*/*");
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{
+                    "application/msword",
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            });
+            startActivityForResult(intent, PICK_DOCX_FILE);
         });
     }
 
@@ -209,26 +213,47 @@ public class AddChapter extends BaseActivity {
     }
 
     @Override
+
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == PICK_DOCX_FILE && resultCode == RESULT_OK && data != null) {
+
             Uri uri = data.getData();
 
+            // ⚠️ Quan trọng: cần persist permission (máy thật bắt buộc)
+            getContentResolver().takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+            );
+
+            // Đọc file
             String content = readDocxFromUri(uri);
+            if (content == null || content.trim().isEmpty()) {
+                Toast.makeText(this, "Không thể đọc nội dung file!", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            // Tách chương
             List<Chapter> chapters = splitChapters(content);
 
-            if(isNewStory){
+            // Lưu chương
+            if (isNewStory) {
                 saveStoryAndChapters(chapters);
-            }
-            else{
+            } else {
                 for (Chapter chapter : chapters) {
                     saveChapter(chapter.getTitle(), chapter.getContent());
                 }
             }
+
+            // Hiển thị danh sách chương đã tách
             showChapterTitles(chapters);
 
-            Toast.makeText(this, "Đã thêm " + chapters.size() + " chương từ file", Toast.LENGTH_LONG).show();
+            Toast.makeText(
+                    this,
+                    "Đã thêm " + chapters.size() + " chương từ file",
+                    Toast.LENGTH_LONG
+            ).show();
         }
     }
 

@@ -138,40 +138,22 @@
 
         </LinearLayout>
 
-        <LinearLayout
+        <Button
+            android:id="@+id/button1"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/blue"
+            android:text="Đọc"
+            android:layout_marginHorizontal="10dp"
             android:layout_marginTop="10dp"
-            android:layout_marginHorizontal="20dp"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/button1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:backgroundTint="@color/blue"
-                android:text="Đọc"
-                android:textAllCaps="false"
-                android:textColor="@color/white" />
-
-            <Button
-                android:id="@+id/button2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:backgroundTint="@color/white"
-                android:text="Thư viện"
-                android:textAllCaps="false"
-                android:textColor="@color/blue" />
-        </LinearLayout>
+            android:textAllCaps="false"
+            android:textColor="@color/white" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="20dp"
+            android:layout_margin="10dp"
             android:orientation="vertical">
-
 
             <TextView
                 android:id="@+id/txtStatus"
@@ -214,6 +196,44 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:text="Giới thiệu:" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:gravity="end"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnEvaluate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="Đánh giá"
+                    android:textAllCaps="false"
+                    android:backgroundTint="@color/blue"
+                    android:textColor="@color/white"/>
+
+                <ImageView
+                    android:id="@+id/imgAdd"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:src="@drawable/ic_add"
+                    android:scaleType="centerCrop"
+                    android:layout_gravity="center"
+                    android:backgroundTint="@color/blue"
+                    android:background="@color/blue"/>
+
+                <ImageView
+                    android:id="@+id/imgStoryReport"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:src="@drawable/ic_error"
+                    android:visibility="gone"
+                    android:layout_marginStart="5dp"
+                    android:scaleType="centerCrop"
+                    android:background="@color/blue"/>
+
+            </LinearLayout>
         </LinearLayout>
 
         <HorizontalScrollView
@@ -331,7 +351,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="15dp"
                 android:orientation="vertical"
-                android:background="@color/xanhnhat">
+                android:background="@drawable/bg_edittext">
 
                 <EditText
                     android:id="@+id/edtComment"
@@ -342,6 +362,7 @@
                     android:layout_marginHorizontal="10dp"
                     android:layout_marginTop="10dp"
                     android:inputType="textMultiLine"
+                    android:hint="Nhập bình luận"
                     android:minLines="3"
                     android:gravity="top|start"
                     android:scrollbars="vertical"

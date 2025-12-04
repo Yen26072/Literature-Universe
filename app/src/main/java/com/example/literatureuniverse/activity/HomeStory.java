@@ -1,6 +1,5 @@
 package com.example.literatureuniverse.activity;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -13,12 +12,12 @@ import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -51,8 +50,6 @@ import com.google.firebase.database.annotations.Nullable;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -62,9 +59,10 @@ import java.util.Map;
 public class HomeStory extends BaseActivity {
     private String authorName, authorId;
     private String storyId, commentnotificationId;
-    private DatabaseReference storyRef, chapterRef, tagRef, userRef, commentRef, replyRef, userRef2;
+    private DatabaseReference storyRef, chapterRef, tagRef, userRef, commentRef, replyRef, userRef2, followRef, libraryRef;
     private TextView txtStoryName, txtAuthorName, txtEyes, txtLike, txtComments, txtStatus, txtNewChapter, txtLatestUpdate, txtDes, txtGoiY;
     private ImageView imgCover, imgCover2, imgAvatarComment;
+    private ImageView imgAdd, imgStoryReport;
     private RecyclerView recyclerViewChapter, recyclerViewGoiY, recyclerComment;
     LinearLayout tabContainerTop, tabContainerBottom;
     HorizontalScrollView paginationScrollChapterTop, paginationScrollChapterBottom;
@@ -77,7 +75,7 @@ public class HomeStory extends BaseActivity {
     private List<Story> storyList;
     private List<TextView> allPageTabs = new ArrayList<>();
     private EditText edtComment;
-    private Button btnSendComment;
+    private Button btnSendComment, btnEvaluate;
     private List<Comment> commentList = new ArrayList<>();
     private Map<String, List<CommentReply>> replyMap = new HashMap<>();
     private CommentAdapter commentAdapter;
@@ -115,6 +113,7 @@ public class HomeStory extends BaseActivity {
         imgCover = findViewById(R.id.imgCover2);
         imgCover2 = findViewById(R.id.imageView5);
         imgAvatarComment = findViewById(R.id.imgAvatarComment);
+        imgAdd = findViewById(R.id.imgAdd);
         txtStatus = findViewById(R.id.txtStatus);
         txtNewChapter = findViewById(R.id.txtNewChapter);
         txtLatestUpdate = findViewById(R.id.txtLastestUpdate);
@@ -128,6 +127,7 @@ public class HomeStory extends BaseActivity {
         paginationScrollChapterBottom = findViewById(R.id.tabScrollChapterBottom);
         edtComment = findViewById(R.id.edtComment);
         btnSendComment = findViewById(R.id.btnSendComment);
+        btnEvaluate = findViewById(R.id.btnEvaluate);
         recyclerComment = findViewById(R.id.recyclerComment);
         tabContainerComment = findViewById(R.id.tabContainerComment);
         paginationScrollComment = findViewById(R.id.tabScrollComment);
@@ -159,6 +159,11 @@ public class HomeStory extends BaseActivity {
 
         if (firebaseUser != null) {
             currentUserId = firebaseUser.getUid();
+            imgAdd.setAlpha(1f);
+        }
+        else {
+            imgAdd.setEnabled(false);
+            imgAdd.setAlpha(0.6f);
         }
 
         storyRef = FirebaseDatabase.getInstance().getReference("stories").child(storyId);
@@ -166,6 +171,8 @@ public class HomeStory extends BaseActivity {
         tagRef = FirebaseDatabase.getInstance().getReference("tags");
         if(currentUserId != null){
             userRef = FirebaseDatabase.getInstance().getReference("users").child(currentUserId);
+            followRef = FirebaseDatabase.getInstance().getReference("follows").child(currentUserId).child(storyId);
+            libraryRef = FirebaseDatabase.getInstance().getReference("libraries").child(currentUserId).child(storyId);
         }
         userRef2 = FirebaseDatabase.getInstance().getReference("users");
         commentRef = FirebaseDatabase.getInstance().getReference("comments");
@@ -174,10 +181,88 @@ public class HomeStory extends BaseActivity {
         // Gửi bình luận
         btnSendComment.setOnClickListener(v -> sendComment());
 
+        btnEvaluate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(HomeStory.this, ReviewStory.class);
+                i.putExtra("storyId", storyId);
+                startActivity(i);
+            }
+        });
+
+        imgAdd.setOnClickListener(v -> showPopupMenu(v));
+
         loadStory();
         loadChapters();
         loadTags();
         loadComments();
+    }
+
+    private void showPopupMenu(View anchorView) {
+        PopupMenu popupMenu = new PopupMenu(this, anchorView);
+        popupMenu.getMenuInflater().inflate(R.menu.menu_add, popupMenu.getMenu());
+
+        // Lấy trạng thái từ Firebase (song song)
+        followRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                popupMenu.getMenu().findItem(R.id.menu_follow).setChecked(snapshot.exists());
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
+
+        libraryRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                popupMenu.getMenu().findItem(R.id.menu_library).setChecked(snapshot.exists());
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
+
+        // Sự kiện click
+        popupMenu.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+
+            if (id == R.id.menu_follow) {
+                if (item.isChecked()) {
+                    followRef.removeValue().addOnSuccessListener(aVoid -> {
+                        item.setChecked(false);
+                        Toast.makeText(getApplicationContext(), "Đã bỏ theo dõi", Toast.LENGTH_SHORT).show();
+                    });
+                } else {
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("followedAt", System.currentTimeMillis());
+                    followRef.setValue(data).addOnSuccessListener(aVoid -> {
+                        item.setChecked(true);
+                        Toast.makeText(getApplicationContext(), "Đã theo dõi truyện", Toast.LENGTH_SHORT).show();
+                    });
+                }
+                return true;
+            }
+
+            if (id == R.id.menu_library) {
+                if (item.isChecked()) {
+                    libraryRef.removeValue().addOnSuccessListener(aVoid -> {
+                        item.setChecked(false);
+                        Toast.makeText(getApplicationContext(), "Đã xóa khỏi thư viện", Toast.LENGTH_SHORT).show();
+                    });
+                } else {
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("addedAt", System.currentTimeMillis());
+                    libraryRef.setValue(data).addOnSuccessListener(aVoid -> {
+                        item.setChecked(true);
+                        Toast.makeText(getApplicationContext(), "Đã thêm vào thư viện", Toast.LENGTH_SHORT).show();
+                    });
+                }
+                return true;
+            }
+
+            return false;
+        });
+
+        popupMenu.show();
     }
 
     private void sendComment() {
@@ -192,7 +277,7 @@ public class HomeStory extends BaseActivity {
                 @Override
                 public void onDataChange(DataSnapshot snapshot) {
                     if (snapshot.exists()) {
-                        Boolean isMuted = snapshot.child("isMuted").getValue(Boolean.class);
+                        Boolean isMuted = snapshot.child("muted").getValue(Boolean.class);
                         Long muteUntil = snapshot.child("muteUntil").getValue(Long.class);
                         long now = System.currentTimeMillis();
                         if (Boolean.TRUE.equals(isMuted) && muteUntil != null && muteUntil > now) {

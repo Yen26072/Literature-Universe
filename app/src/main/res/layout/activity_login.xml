@@ -40,6 +40,8 @@
         android:layout_marginHorizontal="60dp"
         android:imeOptions="actionNext"
         android:ems="10"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_edittext"
         android:inputType="textEmailAddress" />
 
     <TextView
@@ -47,6 +49,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="60dp"
+        android:layout_marginTop="10dp"
         android:text="Mật khẩu:" />
 
     <EditText
@@ -54,8 +57,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="60dp"
+        android:layout_marginTop="10dp"
         android:imeOptions="actionDone"
         android:ems="10"
+        android:background="@drawable/bg_edittext"
         android:inputType="textPassword" />
 
     <TextView
@@ -63,6 +68,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="60dp"
+        android:layout_marginTop="10dp"
         android:textColor="@color/blue"
         android:text="Quên mật khẩu?" />
 
@@ -71,6 +77,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="60dp"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/blue"
+        android:layout_marginTop="10dp"
         android:text="Đăng nhập" />
 
     <TextView
@@ -78,6 +88,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:layout_marginTop="10dp"
         android:textColor="@color/blue"
         android:text="Đăng ký" />
 </LinearLayout>

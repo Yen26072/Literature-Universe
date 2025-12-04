@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/mipmap"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -16,13 +16,55 @@
         android:theme="@style/Theme.LiteratureUniverse"
         tools:targetApi="31">
         <activity
+            android:name=".activity.ManageAdmin"
+            android:exported="false" />
+        <activity
+            android:name=".activity.FullAppRule"
+            android:exported="false" />
+        <activity
+            android:name=".activity.HomeAdmin"
+            android:exported="false" />
+        <activity
+            android:name=".activity.DetailAppeal"
+            android:exported="false" />
+        <activity
+            android:name=".activity.FullAppeal"
+            android:exported="false" />
+        <activity
+            android:name=".activity.DetailReviewReport"
+            android:exported="false" />
+        <activity
+            android:name=".activity.FullPendingReviewReport"
+            android:exported="false" />
+        <activity
+            android:name=".activity.DetailStoryReport"
+            android:exported="false" />
+        <activity
+            android:name=".activity.FullPendingStoryReport"
+            android:exported="false" />
+        <activity
+            android:name=".activity.DetailReport"
+            android:exported="false" />
+        <activity
+            android:name=".activity.ManageAppRules"
+            android:exported="false" />
+        <activity
+            android:name=".activity.DetailCommentReport"
+            android:exported="false" />
+        <activity
+            android:name=".activity.FullPendingCommentReport"
+            android:exported="false" />
+        <activity
+            android:name=".activity.FullReview"
+            android:exported="false" />
+        <activity
+            android:name=".activity.ReviewStory"
+            android:exported="false" />
+        <activity
             android:name=".activity.FilterStory"
             android:exported="false" />
         <activity
             android:name=".activity.SearchResult"
-            android:exported="false" />
-        <activity
-            android:name=".activity.SearchResultActivity"
             android:exported="false" />
         <activity
             android:name=".activity.FullCompletedStories"

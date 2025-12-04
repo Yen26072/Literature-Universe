@@ -15,20 +15,29 @@ import com.bumptech.glide.Glide;
 import com.example.literatureuniverse.R;
 import com.example.literatureuniverse.activity.FilterStory;
 import com.example.literatureuniverse.activity.FollowingStory;
+import com.example.literatureuniverse.activity.FullAppRule;
+import com.example.literatureuniverse.activity.FullReview;
+import com.example.literatureuniverse.activity.HomeAdmin;
 import com.example.literatureuniverse.activity.HomeAdminSuper;
 import com.example.literatureuniverse.activity.Library;
 import com.example.literatureuniverse.activity.Login;
 import com.example.literatureuniverse.activity.MailBox;
 import com.example.literatureuniverse.activity.MainActivity;
+import com.example.literatureuniverse.activity.ManageAdmin;
+import com.example.literatureuniverse.activity.ManageAppRules;
 import com.example.literatureuniverse.activity.MyProfile;
 import com.example.literatureuniverse.activity.MyStory;
 import com.example.literatureuniverse.activity.Reading;
+import com.example.literatureuniverse.model.Review;
+import com.example.literatureuniverse.model.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.*;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BaseActivity extends AppCompatActivity {
 
@@ -57,6 +66,10 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     protected void setupHeader() {
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+
         Log.d("BaseActivity", "setupHeader called");
         avatarImageView = findViewById(R.id.imgAvatar);
         txtLogin = findViewById(R.id.txtLoginMain);
@@ -92,7 +105,7 @@ public class BaseActivity extends AppCompatActivity {
                             currentRole = snapshot.child("role").getValue(String.class);
                             String avatarUrl = snapshot.child("avatarUrl").getValue(String.class);
                             if (avatarUrl != null && !avatarUrl.isEmpty()) {
-                                Glide.with(BaseActivity.this).load(avatarUrl).into(avatarImageView);
+                                Glide.with(BaseActivity.this).load(avatarUrl).circleCrop().into(avatarImageView);
                             }
                         }
                         onRoleLoaded(currentRole);
@@ -119,14 +132,14 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     protected void onRoleLoaded(String currentRole) {
-        if ("admin_super".equals(currentRole)) {
-            Intent intent = new Intent(BaseActivity.this, HomeAdminSuper.class);
-            startActivity(intent);
-            finish();
-        } else {
-            // Nếu là reader thì cho hiển thị giao diện bình thường
-            // hoặc setup layout reader ở đây
-        }
+//        if ("admin_super".equals(currentRole) && !(this instanceof HomeAdminSuper)) {
+//            Intent intent = new Intent(BaseActivity.this, HomeAdminSuper.class);
+//            startActivity(intent);
+//            finish();
+//        } else {
+//             Nếu là reader thì cho hiển thị giao diện bình thường
+//             hoặc setup layout reader ở đây
+//        }
     }
 
     protected void showPopupMenuMenu(View view){
@@ -135,6 +148,9 @@ public class BaseActivity extends AppCompatActivity {
 
         if ("admin_super".equals(currentRole)){
             inflater.inflate(R.menu.header_menu_admin_super, popup.getMenu());
+        }
+        if("admin".equals(currentRole)){
+            inflater.inflate(R.menu.header_menu_admin, popup.getMenu());
         }
         if("reader".equals(currentRole) || "author".equals(currentRole)){
             inflater.inflate(R.menu.menu_left, popup.getMenu());
@@ -174,6 +190,36 @@ public class BaseActivity extends AppCompatActivity {
                 startActivity(intent);
                 return true;
             }
+            if(id == R.id.menu_review){
+                Intent intent = new Intent(BaseActivity.this, FullReview.class);
+                startActivity(intent);
+                return true;
+            }
+            if(id == R.id.menu_regulation){
+                Intent intent = new Intent(BaseActivity.this, ManageAppRules.class);
+                startActivity(intent);
+                return true;
+            }
+            if(id == R.id.menu_regulation2){
+                Intent intent = new Intent(BaseActivity.this, FullAppRule.class);
+                startActivity(intent);
+                return true;
+            }
+            if(id == R.id.menu_regulation3){
+                Intent intent = new Intent(BaseActivity.this, FullAppRule.class);
+                startActivity(intent);
+                return true;
+            }
+            if(id == R.id.menu_home3){
+                Intent intent = new Intent(BaseActivity.this, HomeAdmin.class);
+                startActivity(intent);
+                return true;
+            }
+            if(id == R.id.menu_admin_mana){
+                Intent intent = new Intent(BaseActivity.this, ManageAdmin.class);
+                startActivity(intent);
+                return true;
+            }
             return true;
         });
 
@@ -192,6 +238,13 @@ public class BaseActivity extends AppCompatActivity {
         // Nếu là admin_super thì ẩn các mục khác ngoài Logout
         if ("admin_super".equals(currentRole)) {
             popup.getMenu().findItem(R.id.menu_profile).setVisible(false);
+            popup.getMenu().findItem(R.id.menu_mailbox).setVisible(false);
+            popup.getMenu().findItem(R.id.menu_follow).setVisible(false);
+            popup.getMenu().findItem(R.id.menu_library).setVisible(false);
+            popup.getMenu().findItem(R.id.menu_reading).setVisible(false);
+            popup.getMenu().findItem(R.id.menu_mystory).setVisible(false);
+        }
+        if ("admin".equals(currentRole)) {
             popup.getMenu().findItem(R.id.menu_mailbox).setVisible(false);
             popup.getMenu().findItem(R.id.menu_follow).setVisible(false);
             popup.getMenu().findItem(R.id.menu_library).setVisible(false);
@@ -258,5 +311,61 @@ public class BaseActivity extends AppCompatActivity {
         });
 
         popup.show();
+    }
+
+    public static void checkAndUpdatePenalty(User user, DatabaseReference usersRef) {
+        long now = System.currentTimeMillis();
+
+        Map<String, Object> updates = new HashMap<>();
+        boolean needUpdate = false;
+
+        // ----- CHECK MUTE -----
+        Long muteUntil = user.getMuteUntil();
+        Boolean isMuted = user.isMuted();
+
+        if (muteUntil != null) {
+            if (muteUntil <= now) {
+                updates.put("isMuted", false);
+                updates.put("muteUntil", null);
+
+                user.setMuted(false);
+                user.setMuteUntil(null);
+
+                needUpdate = true;
+            }
+        } else {
+            // Nếu null → luôn đảm bảo không bị mute
+            if (isMuted != null && isMuted) {
+                updates.put("isMuted", false);
+                needUpdate = true;
+            }
+        }
+
+        // ----- CHECK POST BAN -----
+        Long postBanUntil = user.getPostBanUntil();
+        Boolean canPost = user.isCanPost();
+
+        if (postBanUntil != null) {
+            if (postBanUntil <= now) {
+                updates.put("canPost", true);
+                updates.put("postBanUntil", null);
+
+                user.setCanPost(true);
+                user.setPostBanUntil(null);
+
+                needUpdate = true;
+            }
+        } else {
+            // Nếu null → đảm bảo cho phép post
+            if (canPost != null && !canPost) {
+                updates.put("canPost", true);
+                needUpdate = true;
+            }
+        }
+
+        // ----- APPLY UPDATE -----
+        if (needUpdate) {
+            usersRef.updateChildren(updates);
+        }
     }
 }

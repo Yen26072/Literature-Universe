@@ -32,7 +32,9 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MyStory extends BaseActivity {
     Button btnStart;
@@ -134,18 +136,46 @@ public class MyStory extends BaseActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 Boolean canPost = snapshot.child("canPost").getValue(Boolean.class);
-                Long banUntil = snapshot.child("postBanUntil").getValue(Long.class);
+                Long postBanUntil = snapshot.child("postBanUntil").getValue(Long.class);
 
                 long now = System.currentTimeMillis();
+                Map<String, Object> updates = new HashMap<>();
+                boolean needUpdate = false;
 
-                if (canPost != null && !canPost && banUntil != null && banUntil > now) {
+                if (postBanUntil != null) {
+                    if (postBanUntil <= now) {
+                        updates.put("canPost", true);
+                        updates.put("postBanUntil", null);
+
+                        needUpdate = true;
+                    }
+                } else {
+                    // Nếu null → đảm bảo cho phép post
+                    if (canPost != null && !canPost) {
+                        updates.put("canPost", true);
+                        needUpdate = true;
+                    }
+                }
+
+                // ----- APPLY UPDATE -----
+                if (needUpdate || canPost) {
+                    userRef.updateChildren(updates);
+                    imgAdd.setEnabled(true);
+                    imgAdd.setAlpha(1f);
+                } else{
                     imgAdd.setEnabled(false);
                     imgAdd.setAlpha(0.5f);
                     imgAdd.setOnClickListener(null);
-                } else {
-                    imgAdd.setEnabled(true);
-                    imgAdd.setAlpha(1f);
                 }
+
+//                if (canPost == false && !canPost && banUntil != null && banUntil > now) {
+//                    imgAdd.setEnabled(false);
+//                    imgAdd.setAlpha(0.5f);
+//                    imgAdd.setOnClickListener(null);
+//                } else {
+//                    imgAdd.setEnabled(true);
+//                    imgAdd.setAlpha(1f);
+//                }
             }
 
             @Override

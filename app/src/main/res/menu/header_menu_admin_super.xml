@@ -5,23 +5,12 @@
         android:title="Trang chủ"
         android:icon="@drawable/ic_home" />
     <item
-        android:id="@+id/menu_stories_mana"
-        android:title="Quản lý truyện"
-        android:icon="@drawable/ic_stories_mana" />
-    <item
         android:id="@+id/menu_admin_mana"
         android:title="Quản lý admin"
         android:icon="@drawable/ic_admin_mana" />
+
     <item
-        android:id="@+id/menu_author_mana"
-        android:title="Quản lý tác giả"
-        android:icon="@drawable/ic_author_mana" />
-    <item
-        android:id="@+id/menu_tags_mana"
-        android:title="Quản lý thể loại"
-        android:icon="@drawable/ic_tags_mana" />
-    <item
-        android:id="@+id/menu_report_mana"
-        android:title="Báo cáo và khiếu nại"
+        android:id="@+id/menu_regulation"
+        android:title="Quản lý quy định"
         android:icon="@drawable/ic_report_mana" />
 </menu>

@@ -16,16 +16,22 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.literatureuniverse.R;
+import com.example.literatureuniverse.activity.HomeStory;
 import com.example.literatureuniverse.activity.Login;
+import com.example.literatureuniverse.model.Appeal;
 import com.example.literatureuniverse.model.Comment;
 import com.example.literatureuniverse.model.CommentReply;
 import com.example.literatureuniverse.model.CommentNotification;
+import com.example.literatureuniverse.model.CommentReport;
+import com.example.literatureuniverse.model.Review;
+import com.example.literatureuniverse.model.ReviewReport;
 import com.example.literatureuniverse.model.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -110,6 +116,18 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         } else {
             holder.txtReportButton.setVisibility(View.VISIBLE);
         }
+
+        holder.txtReportButton.setOnClickListener(v -> {
+            // Nếu chưa đăng nhập → chuyển Login
+            if (currentUid == null) {
+                Intent intent = new Intent(context, Login.class);
+                context.startActivity(intent);
+                return;
+            }
+
+            // Nếu đăng nhập rồi → mở popup báo cáo
+            showReportDialog(comment);
+        });
 
         if (comment.getChapterId() != null) {
             holder.txtChapterTitle.setVisibility(View.VISIBLE);
@@ -221,6 +239,8 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
                     }
                     context.startActivity(intent);
                 } else {
+//                    String currentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+                    checkMuteStatus(currentUid);  // ⬅️ auto reset nếu hết phạt
                     // Đã đăng nhập → hiện khung reply
                     holder.replyInputLayout.setVisibility(View.VISIBLE);
                     holder.editTextReply.requestFocus();
@@ -231,9 +251,34 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         holder.buttonSendReply.setOnClickListener(v2 -> {
             String replyContent = holder.editTextReply.getText().toString().trim();
             if (!replyContent.isEmpty()) {
-                sendReply(comment.getCommentId(), replyContent, comment.getStoryId());
-                holder.editTextReply.setText(""); // xóa nội dung sau khi gửi
-                holder.replyInputLayout.setVisibility(View.GONE); // ẩn khung reply
+//                String currentUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+                checkMuteStatus(currentUid);
+                DatabaseReference userRef2 = FirebaseDatabase.getInstance().getReference("users").child(currentUid);
+                userRef2.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+                        if (snapshot.exists()) {
+                            Boolean isMuted = snapshot.child("muted").getValue(Boolean.class);
+                            Long muteUntil = snapshot.child("muteUntil").getValue(Long.class);
+                            long now = System.currentTimeMillis();
+                            if (Boolean.TRUE.equals(isMuted) && muteUntil != null && muteUntil > now) {
+                                Toast.makeText(context, "Bạn đang bị chặn bình luận", Toast.LENGTH_LONG).show();
+                                return;
+                            }
+                            else{
+                                sendReply(comment.getCommentId(), replyContent, comment.getStoryId());
+                                holder.editTextReply.setText(""); // xóa nội dung sau khi gửi
+                                holder.replyInputLayout.setVisibility(View.GONE); // ẩn khung reply
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError error) {
+                        Toast.makeText(context, "Lỗi kiểm tra tài khoản", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
 
@@ -252,6 +297,38 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             holder.itemView.setBackgroundColor(Color.TRANSPARENT);
         }
     }
+
+    private void checkMuteStatus(String userId) {
+        DatabaseReference ref = FirebaseDatabase.getInstance()
+                .getReference("users")
+                .child(userId);
+
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!snapshot.exists()) return;
+
+                Boolean isMuted = snapshot.child("muted").getValue(Boolean.class);
+                Long muteUntil = snapshot.child("muteUntil").getValue(Long.class);
+
+                long now = System.currentTimeMillis();
+
+                // Nếu user đang bị phạt nhưng thời gian đã hết
+                if (Boolean.TRUE.equals(isMuted) && muteUntil != null && muteUntil <= now) {
+
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("muted", false);
+                    updates.put("muteUntil", 0);
+
+                    ref.updateChildren(updates);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {}
+        });
+    }
+
 
     private void sendReply(String parentCommentId, String content, String storyId) {
         DatabaseReference replyRef = FirebaseDatabase.getInstance()
@@ -384,6 +461,80 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
             @Override
             public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot snapshot) {}
         });
+    }
+
+    private void showReportDialog(Comment comment) {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(context);
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_report_comment, null);
+        builder.setView(view);
+
+        @SuppressLint({"MissingInflatedId", "LocalSuppress"}) EditText edtContent = view.findViewById(R.id.edtReportContent);
+        @SuppressLint({"MissingInflatedId", "LocalSuppress"}) Button btnSend = view.findViewById(R.id.btnSendReport);
+        @SuppressLint({"MissingInflatedId", "LocalSuppress"}) Button btnCancelReport = view.findViewById(R.id.btnCancelReport);
+
+        android.app.AlertDialog dialog = builder.create();
+        dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        dialog.show();
+
+        btnSend.setOnClickListener(v -> {
+            String content = edtContent.getText().toString().trim();
+            if (content.isEmpty()) {
+                edtContent.setError("Vui lòng nhập nội dung!");
+                return;
+            }
+
+            sendReportToFirebase(comment, content, dialog);
+        });
+
+        btnCancelReport.setOnClickListener(v -> {
+            dialog.dismiss();
+        });
+    }
+
+    private void sendReportToFirebase(Comment comment, String content, android.app.AlertDialog dialog) {
+
+        String reporterId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String reportId = FirebaseDatabase.getInstance().getReference("commentReports").push().getKey();
+        long now = System.currentTimeMillis();
+
+        // Tạo đối tượng Appeal mặc định
+        Appeal appeal = new Appeal();
+        appeal.setHasAppeal(false);
+        appeal.setAppealReason("");
+        appeal.setAppealTime(0);
+        appeal.setAppealStatus("none");
+        appeal.setAppealAdminId("");
+        appeal.setAppealDecisionTime(0);
+
+        // Tạo object ReviewReport
+        CommentReport report = new CommentReport(
+                reportId,
+                comment.getCommentId(),
+                comment.getStoryId(),
+                reporterId,
+                comment.getUserId(),
+                content,
+                now,
+                "pending",     // status
+                "",            // adminId
+                0,             // adminDecisionTime
+                "",            // adminNote
+                "",            // punishment
+                "",            // violationId
+                appeal
+        );
+
+        // Lưu lên Firebase
+        FirebaseDatabase.getInstance().getReference("commentReports")
+                .child(reportId)
+                .setValue(report)
+                .addOnSuccessListener(unused -> {
+                    dialog.dismiss();
+                    Toast.makeText(context, "Đã gửi báo cáo!", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(context, "Lỗi: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                );
     }
 
     //Tìm vị trí comment theo ID

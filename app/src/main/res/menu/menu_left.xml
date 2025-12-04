@@ -3,10 +3,17 @@
     <item
         android:id="@+id/menu_home2"
         android:title="Trang chủ"
-        android:icon="@drawable/ic_mailbox" />
+        android:icon="@drawable/ic_home" />
     <item
         android:id="@+id/menu_filter"
         android:title="Lọc truyện"
-        android:icon="@drawable/ic_mailbox" />
-
+        android:icon="@drawable/ic_filter2"/>
+    <item
+        android:id="@+id/menu_review"
+        android:title="Đánh giá truyện"
+        android:icon="@drawable/ic_review" />
+    <item
+        android:id="@+id/menu_regulation3"
+        android:title="Quy định"
+        android:icon="@drawable/ic_home" />
 </menu>

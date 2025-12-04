@@ -106,6 +106,9 @@ public class MainActivity extends BaseActivity {
         if ("admin_super".equals(role)) {
             startActivity(new Intent(this, HomeAdminSuper.class));
             finishAffinity();
+        } else if ("admin".equals(role)) {
+            startActivity(new Intent(this, HomeAdmin.class));
+            finishAffinity();
         }
     }
 

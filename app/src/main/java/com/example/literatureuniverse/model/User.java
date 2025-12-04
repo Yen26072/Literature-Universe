@@ -11,6 +11,11 @@ public class User {
     private  boolean canPost;
     private Long postBanUntil;
     private int violationCount;
+
+    public boolean isMuted() {
+        return isMuted;
+    }
+
     private long createdAt;
     private String bio;
     private String coverUrl;
@@ -106,7 +111,7 @@ public class User {
         this.role = role;
     }
 
-    public boolean isMuted() {
+    public boolean isMuted(boolean b) {
         return isMuted;
     }
 

@@ -27,6 +27,7 @@
                 android:layout_height="20dp"
                 android:layout_marginStart="20dp"
                 android:src="@drawable/ic_return"
+                android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
@@ -47,7 +48,7 @@
                 android:id="@+id/imgAdd"
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:src="@drawable/ic_add2"
+                android:src="@drawable/ic_add"
                 android:layout_marginEnd="20dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
