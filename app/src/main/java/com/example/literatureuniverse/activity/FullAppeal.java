@@ -6,7 +6,6 @@ import android.util.Log;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -17,7 +16,6 @@ import com.example.literatureuniverse.R;
 import com.example.literatureuniverse.adapter.AppealCommentAdapter;
 import com.example.literatureuniverse.adapter.AppealReviewAdapter;
 import com.example.literatureuniverse.adapter.AppealStoryAdapter;
-import com.example.literatureuniverse.adapter.ReportCommentAdapter;
 import com.example.literatureuniverse.base.BaseActivity;
 import com.example.literatureuniverse.model.CommentReport;
 import com.example.literatureuniverse.model.ReviewReport;

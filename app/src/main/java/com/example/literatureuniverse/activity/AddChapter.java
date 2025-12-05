@@ -1,9 +1,7 @@
 package com.example.literatureuniverse.activity;
 
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.OpenableColumns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -26,12 +24,9 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import android.content.Intent;
 
@@ -54,7 +49,6 @@ public class AddChapter extends BaseActivity {
     private String storyId;
     private boolean isNewStory;
     private DatabaseReference storyRef, chaptersRef, tagStoriesRef;
-    private static final int PICK_TEXT_FILE = 1;
     private static final int PICK_DOCX_FILE = 123;
 
     @Override
@@ -67,7 +61,7 @@ public class AddChapter extends BaseActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        setupHeader(); // bắt buộc gọi sau setContentView
+        setupHeader();
 
         edtChapterTitle = findViewById(R.id.edtChapterTitle);
         edtChapterContent = findViewById(R.id.edtChapterContent);

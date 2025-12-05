@@ -20,7 +20,6 @@ import com.example.literatureuniverse.R;
 import com.example.literatureuniverse.adapter.ReviewAdapter;
 import com.example.literatureuniverse.base.BaseActivity;
 import com.example.literatureuniverse.model.Review;
-import com.example.literatureuniverse.model.Story;
 import com.example.literatureuniverse.model.User;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;

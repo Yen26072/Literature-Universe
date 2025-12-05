@@ -13,8 +13,6 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.literatureuniverse.R;
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.appcheck.FirebaseAppCheck;
-import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 

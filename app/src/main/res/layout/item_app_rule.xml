@@ -54,6 +54,8 @@
             android:id="@+id/btnDeleteRule"
             android:text="Xóa"
             android:textAllCaps="false"
+            android:backgroundTint="@color/red"
+            android:textColor="@color/white"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="12dp"/>

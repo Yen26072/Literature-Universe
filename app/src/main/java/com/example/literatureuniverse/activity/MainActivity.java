@@ -1,17 +1,16 @@
 package com.example.literatureuniverse.activity;
 
 import android.content.Intent;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -33,6 +32,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class MainActivity extends BaseActivity {
+    private TextView tvUnder;
     private RecyclerView rvNewStories, rvCompletedStories;
     private StoryAdapter newStoryAdapter, completedStoryAdapter;
     private List<Story> newStories = new ArrayList<>();
@@ -60,6 +60,17 @@ public class MainActivity extends BaseActivity {
         txtSeeMore2 = findViewById(R.id.tvSeeMore2);
         edtSearch = findViewById(R.id.edtSearch);
         btnSearch = findViewById(R.id.btnSearch);
+        tvUnder = findViewById(R.id.tvUnder);
+
+        tvUnder.setPaintFlags(tvUnder.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+
+        tvUnder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MainActivity.this, Instructions.class);
+                startActivity(intent);
+            }
+        });
 
         txtSeeMore1.setText("Xem thêm >>");
         txtSeeMore2.setText("Xem thêm >>");

@@ -28,7 +28,6 @@ import com.example.literatureuniverse.activity.ManageAppRules;
 import com.example.literatureuniverse.activity.MyProfile;
 import com.example.literatureuniverse.activity.MyStory;
 import com.example.literatureuniverse.activity.Reading;
-import com.example.literatureuniverse.model.Review;
 import com.example.literatureuniverse.model.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -156,23 +155,6 @@ public class BaseActivity extends AppCompatActivity {
             inflater.inflate(R.menu.menu_left, popup.getMenu());
         }
 
-        // Ép PopupMenu hiển thị icon
-        try {
-            Field[] fields = popup.getClass().getDeclaredFields();
-            for (Field field : fields) {
-                if ("mPopup".equals(field.getName())) {
-                    field.setAccessible(true);
-                    Object menuPopupHelper = field.get(popup);
-                    Class<?> classPopupHelper = Class.forName(menuPopupHelper.getClass().getName());
-                    Method setForceIcons = classPopupHelper.getMethod("setForceShowIcon", boolean.class);
-                    setForceIcons.invoke(menuPopupHelper, true);
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         popup.setOnMenuItemClickListener(item -> {
             int id = item.getItemId();
             if(id == R.id.menu_home2){
@@ -224,9 +206,6 @@ public class BaseActivity extends AppCompatActivity {
         });
 
         popup.show();
-
-
-        popup.show();
     }
 
     protected void showPopupMenuAvatar(View view) {
@@ -250,23 +229,6 @@ public class BaseActivity extends AppCompatActivity {
             popup.getMenu().findItem(R.id.menu_library).setVisible(false);
             popup.getMenu().findItem(R.id.menu_reading).setVisible(false);
             popup.getMenu().findItem(R.id.menu_mystory).setVisible(false);
-        }
-
-        // Ép PopupMenu hiển thị icon
-        try {
-            Field[] fields = popup.getClass().getDeclaredFields();
-            for (Field field : fields) {
-                if ("mPopup".equals(field.getName())) {
-                    field.setAccessible(true);
-                    Object menuPopupHelper = field.get(popup);
-                    Class<?> classPopupHelper = Class.forName(menuPopupHelper.getClass().getName());
-                    Method setForceIcons = classPopupHelper.getMethod("setForceShowIcon", boolean.class);
-                    setForceIcons.invoke(menuPopupHelper, true);
-                    break;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         popup.setOnMenuItemClickListener(item -> {
@@ -311,61 +273,5 @@ public class BaseActivity extends AppCompatActivity {
         });
 
         popup.show();
-    }
-
-    public static void checkAndUpdatePenalty(User user, DatabaseReference usersRef) {
-        long now = System.currentTimeMillis();
-
-        Map<String, Object> updates = new HashMap<>();
-        boolean needUpdate = false;
-
-        // ----- CHECK MUTE -----
-        Long muteUntil = user.getMuteUntil();
-        Boolean isMuted = user.isMuted();
-
-        if (muteUntil != null) {
-            if (muteUntil <= now) {
-                updates.put("isMuted", false);
-                updates.put("muteUntil", null);
-
-                user.setMuted(false);
-                user.setMuteUntil(null);
-
-                needUpdate = true;
-            }
-        } else {
-            // Nếu null → luôn đảm bảo không bị mute
-            if (isMuted != null && isMuted) {
-                updates.put("isMuted", false);
-                needUpdate = true;
-            }
-        }
-
-        // ----- CHECK POST BAN -----
-        Long postBanUntil = user.getPostBanUntil();
-        Boolean canPost = user.isCanPost();
-
-        if (postBanUntil != null) {
-            if (postBanUntil <= now) {
-                updates.put("canPost", true);
-                updates.put("postBanUntil", null);
-
-                user.setCanPost(true);
-                user.setPostBanUntil(null);
-
-                needUpdate = true;
-            }
-        } else {
-            // Nếu null → đảm bảo cho phép post
-            if (canPost != null && !canPost) {
-                updates.put("canPost", true);
-                needUpdate = true;
-            }
-        }
-
-        // ----- APPLY UPDATE -----
-        if (needUpdate) {
-            usersRef.updateChildren(updates);
-        }
     }
 }

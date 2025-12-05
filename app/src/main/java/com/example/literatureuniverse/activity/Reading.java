@@ -1,16 +1,13 @@
 package com.example.literatureuniverse.activity;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -18,10 +15,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.literatureuniverse.R;
-import com.example.literatureuniverse.adapter.FollowStoryAdapter;
 import com.example.literatureuniverse.adapter.ReadingStoryAdapter;
 import com.example.literatureuniverse.base.BaseActivity;
-import com.example.literatureuniverse.model.Bookmark;
 import com.example.literatureuniverse.model.Story;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;

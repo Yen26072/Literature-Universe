@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -16,6 +17,9 @@
         android:theme="@style/Theme.LiteratureUniverse"
         tools:targetApi="31">
         <activity
+            android:name=".activity.Instructions"
+            android:exported="false" />
+        <activity
             android:name=".activity.ManageAdmin"
             android:exported="false" />
         <activity
@@ -23,9 +27,6 @@
             android:exported="false" />
         <activity
             android:name=".activity.HomeAdmin"
-            android:exported="false" />
-        <activity
-            android:name=".activity.DetailAppeal"
             android:exported="false" />
         <activity
             android:name=".activity.FullAppeal"

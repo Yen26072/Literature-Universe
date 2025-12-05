@@ -9,7 +9,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -18,7 +17,6 @@ import com.bumptech.glide.Glide;
 import com.example.literatureuniverse.R;
 import com.example.literatureuniverse.base.BaseActivity;
 import com.example.literatureuniverse.model.AppRule;
-import com.example.literatureuniverse.model.CommentReport;
 import com.example.literatureuniverse.model.Notification;
 import com.example.literatureuniverse.model.StoryReport;
 import com.example.literatureuniverse.model.User;

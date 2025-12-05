@@ -12,7 +12,6 @@ import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -23,7 +22,6 @@ import com.example.literatureuniverse.R;
 import com.example.literatureuniverse.adapter.AppRuleAdapter;
 import com.example.literatureuniverse.base.BaseActivity;
 import com.example.literatureuniverse.model.AppRule;
-import com.google.android.material.button.MaterialButton;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 

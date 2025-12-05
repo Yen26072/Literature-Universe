@@ -21,11 +21,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.literatureuniverse.R;
-import com.example.literatureuniverse.adapter.CommentAdapter;
 import com.example.literatureuniverse.adapter.ReviewAdapter;
 import com.example.literatureuniverse.base.BaseActivity;
-import com.example.literatureuniverse.model.Comment;
-import com.example.literatureuniverse.model.CommentReply;
 import com.example.literatureuniverse.model.Review;
 import com.example.literatureuniverse.model.User;
 import com.google.firebase.auth.FirebaseAuth;
@@ -34,16 +31,11 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.MutableData;
-import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.database.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class ReviewStory extends BaseActivity {
     ImageView imgAvatarReview;

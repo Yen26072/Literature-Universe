@@ -265,30 +265,6 @@ public class DetailCommentReport extends BaseActivity {
         });
     }
 
-    private void sendAppealAcceptedNotification(String punishedUserId, String reportId) {
-
-        DatabaseReference ref = FirebaseDatabase.getInstance()
-                .getReference("notifications")
-                .child(punishedUserId);
-
-        String id = ref.push().getKey();
-
-        Notification noti = new Notification(
-                id,
-                reportId,
-                "appeal_result",
-                null,
-                null,
-                null,
-                null,
-                System.currentTimeMillis(),
-                false,
-                "Khiếu nại của bạn đã được CHẤP NHẬN.\nHình phạt đã được hủy bỏ."
-        );
-
-        ref.child(id).setValue(noti);
-    }
-
     private void rejectReport() {
         String adminId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         long now = System.currentTimeMillis();

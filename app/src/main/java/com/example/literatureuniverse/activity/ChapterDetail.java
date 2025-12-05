@@ -43,7 +43,6 @@ import com.example.literatureuniverse.model.Appeal;
 import com.example.literatureuniverse.model.Chapter;
 import com.example.literatureuniverse.model.Comment;
 import com.example.literatureuniverse.model.CommentReply;
-import com.example.literatureuniverse.model.ReviewReport;
 import com.example.literatureuniverse.model.Story;
 import com.example.literatureuniverse.model.StoryReport;
 import com.example.literatureuniverse.model.User;

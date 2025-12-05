@@ -1,8 +1,5 @@
 package com.example.literatureuniverse.activity;
 
-import static com.example.literatureuniverse.R.*;
-
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -21,7 +18,6 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -33,14 +29,12 @@ import com.example.literatureuniverse.model.User;
 import com.example.literatureuniverse.model.cloudinary.CloudinaryService;
 import com.example.literatureuniverse.model.cloudinary.UploadResponse;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.database.annotations.Nullable;
-import com.google.firebase.storage.FirebaseStorage;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

@@ -12,6 +12,8 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <include layout="@layout/header"/>
+
         <TextView
             android:id="@+id/txtSearchResult"
             android:layout_width="match_parent"

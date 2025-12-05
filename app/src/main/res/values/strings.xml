@@ -2,4 +2,9 @@
     <string name="app_name">Literature Universe</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="note">Lưu ý: Nếu muốn đăng nhiều chương cùng lúc từ file thì tên mỗi chương phải bắt đầu bằng "Chương", sau đó xuống dòng và nội dung chương, kết thúc mỗi chương thì xuống dòng rồi lại tên chương tiếp theo. Ví dụ:\n
+        Chương 1: Những đứa con\n
+        Nội dung chương\n
+        Chương 2: Những đứa trẻ\n
+        Nội dung chương</string>
 </resources>

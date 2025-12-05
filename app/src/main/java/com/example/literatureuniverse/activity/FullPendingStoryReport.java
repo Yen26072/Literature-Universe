@@ -11,7 +11,6 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -19,12 +18,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.literatureuniverse.R;
-import com.example.literatureuniverse.adapter.ReportCommentAdapter;
-import com.example.literatureuniverse.adapter.ReportReviewAdapter;
 import com.example.literatureuniverse.adapter.ReportStoryAdapter;
 import com.example.literatureuniverse.base.BaseActivity;
-import com.example.literatureuniverse.model.CommentReport;
-import com.example.literatureuniverse.model.ReviewReport;
 import com.example.literatureuniverse.model.StoryReport;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
