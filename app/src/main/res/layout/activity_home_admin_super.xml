@@ -143,27 +143,28 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_marginTop="20dp"
             android:layout_margin="8dp"
-            android:background="@drawable/bg_card">
+            android:layout_marginTop="20dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:visibility="gone">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Truyện nổi bật"
                 android:padding="10dp"
-                android:textStyle="bold"
+                android:text="Truyện nổi bật"
+                android:textColor="#000"
                 android:textSize="20sp"
-                android:textColor="#000" />
+                android:textStyle="bold" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerFeatured"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
                 android:layout_marginHorizontal="6dp"
-                android:nestedScrollingEnabled="false"/>
+                android:layout_marginBottom="10dp"
+                android:nestedScrollingEnabled="false" />
         </LinearLayout>
 
 

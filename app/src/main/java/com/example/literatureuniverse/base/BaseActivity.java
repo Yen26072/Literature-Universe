@@ -77,6 +77,9 @@ public class BaseActivity extends AppCompatActivity {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
         if (user == null) {
+            if(imageView != null){
+                imageView.setOnClickListener( v -> showPopupMenuMenu(v));
+            }
             // Chưa đăng nhập → ẩn avatar, hiện nút đăng nhập
             if (avatarImageView != null) avatarImageView.setVisibility(View.GONE);
             if (txtLogin != null) txtLogin.setVisibility(View.VISIBLE);
@@ -151,7 +154,7 @@ public class BaseActivity extends AppCompatActivity {
         if("admin".equals(currentRole)){
             inflater.inflate(R.menu.header_menu_admin, popup.getMenu());
         }
-        if("reader".equals(currentRole) || "author".equals(currentRole)){
+        if("reader".equals(currentRole) || "author".equals(currentRole) || FirebaseAuth.getInstance().getCurrentUser() == null){
             inflater.inflate(R.menu.menu_left, popup.getMenu());
         }
 

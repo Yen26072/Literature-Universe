@@ -112,7 +112,6 @@ public class HomeAdminSuper extends BaseActivity {
         loadNumberStories();
         loadNumberAdmins();
         loadNumberAuthors();
-        loadBestStories();
     }
 
     private void loadPendingCount(String node, String type) {
@@ -195,43 +194,4 @@ public class HomeAdminSuper extends BaseActivity {
             public void onCancelled(@NonNull DatabaseError error) {}
         });
     }
-
-    private void loadBestStories() {
-        storiesRef.orderByChild("views").limitToLast(3)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
-
-                        List<Story> topStories = new ArrayList<>();
-
-                        for (DataSnapshot snap : snapshot.getChildren()) {
-                            Story story = snap.getValue(Story.class);
-                            if (story != null) {
-                                story.setStoryId(snap.getKey()); // nếu cần dùng id
-                                topStories.add(story);
-                            }
-                        }
-
-                        // Firebase trả từ thấp → cao → phải đảo ngược
-                        Collections.reverse(topStories);
-
-                        // Gán vào adapter
-                        bestStoryAdapter.setData(topStories);
-                        bestStoryAdapter.notifyDataSetChanged();
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {}
-                });
-    }
-
-
-
-//    @Override
-//    protected void onRoleLoaded(String role) {
-//        if ("reader".equals(role) || "author".equals(role)) {
-//            startActivity(new Intent(this, MainActivity.class));
-//            finishAffinity();
-//        }
-//    }
 }

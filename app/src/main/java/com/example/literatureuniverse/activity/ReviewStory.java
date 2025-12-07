@@ -36,6 +36,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ReviewStory extends BaseActivity {
     ImageView imgAvatarReview;
@@ -107,8 +108,9 @@ public class ReviewStory extends BaseActivity {
                         Long muteUntil = snapshot.child("muteUntil").getValue(Long.class);
                         long now = System.currentTimeMillis();
                         if (Boolean.TRUE.equals(isMuted) && muteUntil != null && muteUntil > now) {
-                            Toast.makeText(ReviewStory.this, "Bạn đang bị chặn bình luận", Toast.LENGTH_LONG).show();
-                        } else{
+                            Toast.makeText(ReviewStory.this, "Bạn đang bị chặn đánh giá", Toast.LENGTH_LONG).show();
+                        }
+                        else{
                             String content = edtReview.getText().toString().trim();
 
                             if (content.isEmpty()) {

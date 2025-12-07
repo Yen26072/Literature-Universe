@@ -71,24 +71,29 @@ public class AppRuleAdapter extends RecyclerView.Adapter<AppRuleAdapter.RuleView
                 ? FirebaseAuth.getInstance().getCurrentUser().getUid()
                 : null;
 
-        userRef = FirebaseDatabase.getInstance().getReference("users").child(currentUid);
-        userRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (!snapshot.exists()) return;
-                String role = snapshot.child("role").getValue(String.class);
-                if(role.equals("admin_super")){
-                    holder.btnDelete.setVisibility(View.VISIBLE);
-                    holder.btnEdit.setVisibility(View.VISIBLE);
-                } else {
-                    holder.btnDelete.setVisibility(View.GONE);
-                    holder.btnEdit.setVisibility(View.GONE);
+        if(FirebaseAuth.getInstance().getCurrentUser() != null){
+            userRef = FirebaseDatabase.getInstance().getReference("users").child(currentUid);
+            userRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (!snapshot.exists()) return;
+                    String role = snapshot.child("role").getValue(String.class);
+                    if(role.equals("admin_super")){
+                        holder.btnDelete.setVisibility(View.VISIBLE);
+                        holder.btnEdit.setVisibility(View.VISIBLE);
+                    } else {
+                        holder.btnDelete.setVisibility(View.GONE);
+                        holder.btnEdit.setVisibility(View.GONE);
+                    }
                 }
-            }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {}
-        });
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {}
+            });
+        } else {
+            holder.btnDelete.setVisibility(View.GONE);
+            holder.btnEdit.setVisibility(View.GONE);
+        }
 
         if(rule.getActionType().equals("comment_review")){
             holder.tvActionType.setText("Loại: Bình luận/Đánh giá");

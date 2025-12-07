@@ -130,19 +130,19 @@ public class MyStoryDetail extends BaseActivity {
             startActivity(intent);
         });
 
-        btnDeleteStory.setOnClickListener(v -> {
-            new AlertDialog.Builder(this)
-                    .setTitle("Xóa truyện")
-                    .setMessage("Bạn có chắc muốn xóa truyện này không?")
-                    .setPositiveButton("Xóa", (dialog, which) -> {
-                        storyRef.child("deleted").setValue(true);
-                        storyRef.child("deletedBy").setValue(userId);
-                        Intent intent = new Intent(MyStoryDetail.this, MyStory.class);
-                        startActivity(intent);
-                    })
-                    .setNegativeButton("Hủy", null)
-                    .show();
-        });
+//        btnDeleteStory.setOnClickListener(v -> {
+//            new AlertDialog.Builder(this)
+//                    .setTitle("Xóa truyện")
+//                    .setMessage("Bạn có chắc muốn xóa truyện này không?")
+//                    .setPositiveButton("Xóa", (dialog, which) -> {
+//                        storyRef.child("deleted").setValue(true);
+//                        storyRef.child("deletedBy").setValue(userId);
+//                        Intent intent = new Intent(MyStoryDetail.this, MyStory.class);
+//                        startActivity(intent);
+//                    })
+//                    .setNegativeButton("Hủy", null)
+//                    .show();
+//        });
 
         btnSave.setOnClickListener(v -> saveStory());
 

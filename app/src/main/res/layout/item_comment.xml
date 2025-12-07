@@ -73,7 +73,7 @@
                 android:id="@+id/txtReportButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Cử báo"
+                android:text="Báo cáo"
                 android:gravity="end"
                 android:textColor="#2196F3"
                 android:textStyle="bold"

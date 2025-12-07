@@ -251,7 +251,11 @@ public class ChapterDetail extends BaseActivity {
                 Story story = snapshot.getValue(Story.class);
                 if (story == null) return;
                 String authorId = story.getAuthorId();
-                linearReport.setOnClickListener(v -> showReportDialog(storyId, authorId, currentChapterId));
+                if(!userId.equals(authorId)){
+                    linearReport.setVisibility(View.VISIBLE);
+                    linearReport.setOnClickListener(v -> showReportDialog(storyId, authorId, currentChapterId));
+                }
+                else linearReport.setVisibility(View.GONE);
             }
 
             @Override
